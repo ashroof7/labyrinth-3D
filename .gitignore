@@ -11,3 +11,10 @@
 *.lai
 *.la
 *.a
+
+#project custom ignores
+Debug
+.cproject
+.project
+src/include
+src/InitShader.cpp
