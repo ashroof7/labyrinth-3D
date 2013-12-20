@@ -24,9 +24,9 @@ mat4 V_mat = mat4(1.0); // View matrix
 mat4 W_mat = mat4(1.0); // World matrix (rotation of cube by mouse)
 mat4 P_mat = mat4(1.0); // projection matrix
 
-vec3 eye(5,5,-10);
+vec3 eye(5,5,-3);
 
-// test cube for EPIC RADO :D :D :D
+// test cube for EPIC RADO :D :D
 cube *test_cube;
 
 //==================
@@ -55,7 +55,6 @@ void init_buffers() {
 	test_cube = new cube(program, 0 );
 }
 
-
 void init(void) {
 
 	// Load shaders and use the resulting shader program
@@ -73,17 +72,16 @@ void init(void) {
 	M_loc = glGetUniformLocation(program, "M");
 	W_loc = glGetUniformLocation(program, "W");
 
-	glUniformMatrix4fv(P_loc, 1, true, P_mat);
-	glUniformMatrix4fv(V_loc, 1, true, V_mat);
-	glUniformMatrix4fv(M_loc, 1, true, M_mat);
-	glUniformMatrix4fv(W_loc, 1, true, W_mat);
+	glUniformMatrix4fv(P_loc, 1, GL_TRUE, P_mat);
+	glUniformMatrix4fv(V_loc, 1, GL_TRUE, V_mat);
+	glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
+	glUniformMatrix4fv(W_loc, 1, GL_TRUE, W_mat);
 
 	glClearColor(0.9, 0.9, 0.9, 1.0); // grey background :/ not sure about the color
 
 	glEnable(GL_DEPTH_TEST);// Enable depth test
 	glDepthFunc(GL_LESS);// Accept fragment if it closer to the camera than the former one
 }
-
 
 void display(void) {
 	glClear(GL_COLOR_BUFFER_BIT);     // clear the window//
@@ -92,13 +90,12 @@ void display(void) {
 	glBindVertexArray(vao);
 
 	// update rotation and translation matrices of each object before uploading to shader
-	glUniformMatrix4fv(M_loc, 1, true, M_mat);
+	glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
 	test_cube->draw();
 
 	glDisableVertexAttribArray(vao);
 	glutSwapBuffers(); // Double buffering
 }
-
 
 void keyboard(unsigned char key, int x, int y) {
 	switch (key) {
@@ -133,7 +130,7 @@ void onReshape(int width, int height) {
 	screen_height = height;
 	glViewport(0, 0, screen_width, screen_height);
 	P_mat = Perspective(45.0f, 1.0f*screen_width/screen_height, 1.0f, 100.0f);
-	glUniformMatrix4fv(P_loc, 1, false, P_mat);
+	glUniformMatrix4fv(P_loc, 1, GL_TRUE, P_mat);
 }
 
 //=========

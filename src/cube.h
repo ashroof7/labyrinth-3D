@@ -23,7 +23,7 @@ private:
 	static GLushort base_elements[];
 
 public:
-	GLuint pos_vbo, col_vbo, base_elements_ibo;
+	GLuint pos_vbo, col_vbo, base_elements_ibo, tex_vbo;
 	cube();
 	cube(GLuint program, int offset_index);
 	virtual ~cube();

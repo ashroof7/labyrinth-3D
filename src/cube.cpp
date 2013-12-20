@@ -69,7 +69,6 @@ cube::cube(GLuint program, int offset_index) {
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(base_elements), base_elements, GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-
 	// side vertices
 	glGenBuffers(1, &pos_vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, pos_vbo);
@@ -90,10 +89,13 @@ cube::cube(GLuint program, int offset_index) {
 	glEnableVertexAttribArray(col_attrib);
 	glVertexAttribPointer(col_attrib, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
+
+
+	// textures ...
 }
 
 cube::cube() {
-	col_vbo = pos_vbo = base_elements_ibo =-1;
+	col_vbo = pos_vbo = base_elements_ibo = tex_vbo =-1;
 }
 
 cube::~cube() {
@@ -105,8 +107,8 @@ cube::~cube() {
 void cube::draw(){
 	//	 draw base using buffer element
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, base_elements_ibo);
-	int size;  glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+	GLint size;  glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
 	glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
 	// draw sides
-	glDrawArrays(GL_TRIANGLES, 8,36); // first 8 elements are used to draw the base cube
+//	glDrawArrays(GL_TRIANGLES, 8,36); // first 8 elements are used to draw the base cube
 }
