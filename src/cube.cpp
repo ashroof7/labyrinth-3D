@@ -16,6 +16,7 @@ GLfloat cube::side_vertices[] = {
 		-1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, -1.0, -1.0, 1.0, -1.0, };
 
 GLfloat cube::side_colors[] = {
+
 //		// front base cube
 //		0.0, 0.0, 0.0,
 //		0.0, 0.0, 0.0,
