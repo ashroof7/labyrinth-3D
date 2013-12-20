@@ -26,7 +26,7 @@ mat4 P_mat = mat4(1.0); // projection matrix
 
 vec3 eye(5,5,-10);
 
-// test cube for EPIC RADO :D :D
+// test cube for EPIC RADO :D :D :D
 cube *test_cube;
 
 //==================
