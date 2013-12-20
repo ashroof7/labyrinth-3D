@@ -10,10 +10,10 @@
 
 #include <GL/glew.h>
 #include <GL/glut.h>
-
+#include "include/Angel.h"
 
 using namespace std;
-
+using namespace Angel;
 
 class cube {
 
@@ -23,7 +23,8 @@ private:
 	static GLushort base_elements[];
 
 public:
-	GLuint pos_vbo, col_vbo, base_elements_ibo;
+	mat4 translation, rotation;
+	GLuint pos_vbo, col_vbo, base_elements_ibo, texture_id;
 	cube();
 	cube(GLuint program, int offset_index);
 	virtual ~cube();

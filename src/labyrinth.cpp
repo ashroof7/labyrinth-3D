@@ -1,3 +1,5 @@
+
+
 #include "include/Angel.h"
 #include "cube.h"
 
@@ -24,10 +26,25 @@ mat4 V_mat = mat4(1.0); // View matrix
 mat4 W_mat = mat4(1.0); // World matrix (rotation of cube by mouse)
 mat4 P_mat = mat4(1.0); // projection matrix
 
-vec3 eye(5,5,-10);
+vec3 eye(2,10,-10);
 
 // test cube for EPIC RADO :D :D
 cube *test_cube;
+
+const int lvl_width = 7;
+const int lvl_height = 7;
+
+char map[7][7] = {{'#','#','#','#','#','#','#'},
+				{'#','.','.','.','.','.','#'},
+				{'#','.','.','#','.','.','#'},
+				{'#','.','#','#','#','.','#'},
+				{'#','.','.','#','.','.','#'},
+				{'#','.','.','.','.','.','#'},
+				{'#','#','#','#','#','#','#'}};
+
+
+
+cube * walls[lvl_height][lvl_width];
 
 //==================
 //openGL functions
@@ -48,6 +65,23 @@ inline void create_buffer(GLuint* vbo, size_t pts_size, const GLvoid * pts, size
 	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0) );
 }
 
+
+GLuint cube_width = 2;
+GLuint cube_height = 2;
+
+void build_lvl(){
+	for (int i = 0; i < lvl_height; ++i) {
+		for (int j = 0; j < lvl_width; ++j) {
+			if (map[i][j]=='#') {//wall
+				walls[i][j] = new cube(program, 0);
+				walls[i][j]->translation = Translate((-1.0*lvl_width/2 + j)*cube_width, 0, (-1.0*lvl_height/2 + i)*cube_height);
+			}else if(map[i][j] == '.'){	// empty
+				//nothing to do here :P
+			}
+		}
+	}
+}
+
 void init_buffers() {
 	// Initializing  VAOs and VBOs
 	glGenVertexArrays(1, &vao);
@@ -61,7 +95,7 @@ void init(void) {
 	// Load shaders and use the resulting shader program
 	program = InitShader("vshader.glsl", "fshader.glsl");
 	glUseProgram(program);
-
+	build_lvl();
 	init_buffers();
 
 	V_mat = LookAt(eye, vec3(0,0,0), vec3(0,1,0));
@@ -73,10 +107,10 @@ void init(void) {
 	M_loc = glGetUniformLocation(program, "M");
 	W_loc = glGetUniformLocation(program, "W");
 
-	glUniformMatrix4fv(P_loc, 1, true, P_mat);
-	glUniformMatrix4fv(V_loc, 1, true, V_mat);
-	glUniformMatrix4fv(M_loc, 1, true, M_mat);
-	glUniformMatrix4fv(W_loc, 1, true, W_mat);
+	glUniformMatrix4fv(P_loc, 1, GL_TRUE, P_mat);
+	glUniformMatrix4fv(V_loc, 1, GL_TRUE, V_mat);
+	glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
+	glUniformMatrix4fv(W_loc, 1, GL_TRUE, W_mat);
 
 	glClearColor(0.9, 0.9, 0.9, 1.0); // grey background :/ not sure about the color
 
@@ -92,8 +126,21 @@ void display(void) {
 	glBindVertexArray(vao);
 
 	// update rotation and translation matrices of each object before uploading to shader
-	glUniformMatrix4fv(M_loc, 1, true, M_mat);
-	test_cube->draw();
+//	glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
+//	test_cube->draw();
+
+
+	for (int i = 0; i < lvl_height; ++i) {
+			for (int j = 0; j < lvl_width; ++j) {
+				if (map[i][j]=='#') {//wall
+					M_mat = walls[i][j]->translation * walls[i][j]->rotation;
+					glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
+					walls[i][j]->draw();
+				}else if(map[i][j] =='.'){ // empty
+					//nothing to do here :P
+				}
+			}
+		}
 
 	glDisableVertexAttribArray(vao);
 	glutSwapBuffers(); // Double buffering
@@ -133,7 +180,7 @@ void onReshape(int width, int height) {
 	screen_height = height;
 	glViewport(0, 0, screen_width, screen_height);
 	P_mat = Perspective(45.0f, 1.0f*screen_width/screen_height, 1.0f, 100.0f);
-	glUniformMatrix4fv(P_loc, 1, false, P_mat);
+	glUniformMatrix4fv(P_loc, 1, GL_FALSE, P_mat);
 }
 
 //=========

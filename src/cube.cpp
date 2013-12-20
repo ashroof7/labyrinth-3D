@@ -12,15 +12,15 @@ using namespace std;
 
 GLfloat cube::side_vertices[] = {
 		// front base cube
-		-0.5, -0.5,  0.5,
-		 0.5, -0.5,  0.5,
-		 0.5,  0.5,  0.5,
-		-0.5,  0.5,  0.5,
+		-1.0, -1.0,  1.0,
+		 1.0, -1.0,  1.0,
+		 1.0,  1.0,  1.0,
+		-1.0,  1.0,  1.0,
 		// back base cube
-		-0.5, -0.5, -0.5,
-		 0.5, -0.5, -0.5,
-		 0.5,  0.5, -0.5,
-		-0.5,  0.5, -0.5,
+		-1.0, -1.0, -1.0,
+		 1.0, -1.0, -1.0,
+		 1.0,  1.0, -1.0,
+		-1.0,  1.0, -1.0,
 };
 
 GLfloat cube::side_colors[] = {
@@ -63,6 +63,9 @@ GLushort cube::base_elements[] = {
 		1, 5, 6, 6, 2, 1, };
 
 cube::cube(GLuint program, int offset_index) {
+	translation = mat4(1.0);
+	rotation = mat4(1.0);
+
 	// base cube elements
 	glGenBuffers(1, &base_elements_ibo);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, base_elements_ibo);
@@ -90,23 +93,43 @@ cube::cube(GLuint program, int offset_index) {
 	glEnableVertexAttribArray(col_attrib);
 	glVertexAttribPointer(col_attrib, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
+	// textures
+	texture_id = -1;
+//	glGenTextures(1, &texture_id);
+//	glBindTexture(GL_TEXTURE_2D, texture_id);
+//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+//
+//	glTexImage2D(GL_TEXTURE_2D, // target
+//		       0,  // level, 0 = base, no minimap,
+//		       GL_RGB, // internalformat
+//		       wood_texture.width,  // width
+//		       wood_texture.height,  // height
+//		       0,  // border, always 0 in OpenGL ES
+//		       GL_RGB,  // format
+//		       GL_UNSIGNED_BYTE, // type
+//		       wood_texture.pixel_data);
 }
 
 cube::cube() {
-	col_vbo = pos_vbo = base_elements_ibo =-1;
+	col_vbo = pos_vbo = base_elements_ibo = texture_id = -1;
 }
 
 cube::~cube() {
 	glDeleteBuffers(1, &pos_vbo);
 	glDeleteBuffers(1, &col_vbo);
 	glDeleteBuffers(1, &base_elements_ibo);
+//	glDeleteTextures(1, &texture_id);
 }
 
 void cube::draw(){
 	//	 draw base using buffer element
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, base_elements_ibo);
-	int size;  glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+	GLint size;  glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
 	glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
-	// draw sides
-	glDrawArrays(GL_TRIANGLES, 8,36); // first 8 elements are used to draw the base cube
+
+//	glActiveTexture(GL_TEXTURE0);
+//	glBindTexture(GL_TEXTURE_2D, texture_id);
+//	uniform_wood_texture = glGetUniformLocation(program, "wood_texture");
+//	glUniform1i(uniform_wood_texture, /*GL_TEXTURE*/0);
+
 }
