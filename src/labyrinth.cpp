@@ -244,7 +244,7 @@ void onMotion(int x, int y) {
 	}
 }
 void animate(int n) {
-	_ball->translation *= Translate(zangle / 100.0, 0, -xangle / 100.0);
+	_ball->translation *= Translate(-zangle / 100.0, 0, xangle / 100.0);
 	display();
 	glutTimerFunc(TIMERMSECS, animate, 0);
 }
