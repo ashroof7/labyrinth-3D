@@ -245,23 +245,26 @@ void onMotion(int x, int y) {
 }
 void animate(int n) {
 	mat4 tmp = _ball->translation;
-	tmp *= Translate(-zangle / 100.0, 0, 0);
 	vec4 pos = tmp * vec3(0, 0, 0);
+	tmp *= Translate(-zangle / 100.0, 0, 0);
+	pos = tmp * vec3(0, 0, 0);
 	pos[0] += lvl_width / 2.0;
 	pos[2] += lvl_height / 2.0;
 	cout << pos[2] << " " << pos[0] << endl;
-	if (map[(int) (pos[2] + 0.3)][(int) (pos[0] + 0.3)] == '#'
+	if (map[(int) ceil(pos[2] - 0.3)][(int) floor(pos[0] + 0.3)] == '#'
+			|| map[(int) floor(pos[2] + 0.3)][(int) ceil(pos[0] - 0.3)] == '#'
+			|| map[(int) floor(pos[2] + 0.3)][(int) floor(pos[0] + 0.3)] == '#'
 			|| map[(int) ceil(pos[2] - 0.3)][(int) ceil(pos[0] - 0.3)] == '#') {
 		tmp = _ball->translation;
-		cout << "xx " << (int) pos[2] << " " << (int) pos[0] << endl;
 	}
 	mat4 tt = tmp;
 	tmp *= Translate(0, 0, xangle / 100.0);
 	pos = tmp * vec3(0, 0, 0);
 	pos[0] += lvl_height / 2.0;
 	pos[2] += lvl_width / 2.0;
-//	cout << pos[2] << " " << pos[0] << endl;
-	if (map[(int) (pos[2] + 0.3)][(int) (pos[0] + 0.3)] == '#'
+	if (map[(int) ceil(pos[2] - 0.3)][(int) floor(pos[0] + 0.3)] == '#'
+			|| map[(int) floor(pos[2] + 0.3)][(int) ceil(pos[0] - 0.3)] == '#'
+			|| map[(int) floor(pos[2] + 0.3)][(int) floor(pos[0] + 0.3)] == '#'
 			|| map[(int) ceil(pos[2] - 0.3)][(int) ceil(pos[0] - 0.3)] == '#') {
 		tmp = tt;
 	}
