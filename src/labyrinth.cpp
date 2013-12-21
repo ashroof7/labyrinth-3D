@@ -10,6 +10,8 @@
 using namespace std;
 using namespace Angel;
 
+const int TIMERMSECS = 100;
+
 //mouse state variables
 int last_mx = 0, last_my = 0, cur_mx = 0, cur_my = 0;
 int arcball_on = false;
@@ -40,8 +42,8 @@ const int lvl_height = 7;
 GLuint cube_width = 1;
 GLuint cube_height = 1;
 GLuint uniform_tex_sampler;
-double xangle = 0;
-double zangle = 0;
+float xangle = 0;
+float zangle = 0;
 char map[7][7] = { { '#', '#', '#', '#', '#', '#', '#' }, { '#', '.', '.', '#',
 		'.', '.', '#' }, { '#', '#', '.', '#', '.', '.', '#' }, { '#', '.', '#',
 		'#', '#', '#', '#' }, { '#', '.', '.', '#', '.', '.', '#' }, { '#', '#',
@@ -84,7 +86,7 @@ void build_lvl() {
 			}
 		}
 	}
-	_ball = new ball(program,0.3, 1, 1);
+	_ball = new ball(program, 0.3, 1, 1);
 	_ball->translation = Translate(
 			(-1.0 * lvl_width / 2 + _ball->i) * cube_width, 0,
 			(-1.0 * lvl_height / 2 + _ball->j) * cube_height);
@@ -233,7 +235,6 @@ void onMotion(int x, int y) {
 
 			W_mat = RotateX(xangle) * RotateZ(zangle);
 			cout << last_mx - cur_mx << "  " << last_my - cur_my << endl;
-
 			last_mx = cur_mx;
 			last_my = cur_my;
 
@@ -242,7 +243,11 @@ void onMotion(int x, int y) {
 		}
 	}
 }
-
+void animate(int n) {
+	_ball->translation *= Translate(zangle / 100.0, 0, -xangle / 100.0);
+	display();
+	glutTimerFunc(TIMERMSECS, animate, 0);
+}
 //=========
 //main loop
 //=========
@@ -264,7 +269,7 @@ int main(int argc, char **argv) {
 	glutCreateWindow("Labyrinth :D");
 	glewInit();
 	init();
-
+	glutTimerFunc(TIMERMSECS, animate, 0);
 	glutDisplayFunc(display);
 	glutKeyboardFunc(keyboard);
 	glutSpecialFunc(keyboard_special);
