@@ -8,13 +8,17 @@
 #ifndef CUBE_H_
 #define CUBE_H_
 
-//#include <GL/glew.h>
-//#include <GL/glut.h>
-#include "include/Angel.h"
+#include <GL/glew.h>
+#include <GL/glut.h>
 #include "wood_texture.c"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/transform.hpp>
+
 using namespace std;
-using namespace Angel;
+using namespace glm;
 
 class cube {
 

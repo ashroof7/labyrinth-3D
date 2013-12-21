@@ -1,14 +1,19 @@
-#include "include/Angel.h"
+#include "utils.h"
 #include "cube.h"
 
-#include <iostream>
 #include <time.h>
-#include <sys/time.h>
-#include <unistd.h>
+#include <iostream>
 #include <algorithm>
+#include <GL/glew.h>
+#include <GL/glut.h>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/transform.hpp>
 
 using namespace std;
-using namespace Angel;
+using namespace glm;
 
 //mouse state variables
 int last_mx = 0, last_my = 0, cur_mx = 0, cur_my = 0;
@@ -29,18 +34,10 @@ mat4 V_mat = mat4(1.0); // View matrix
 mat4 W_mat = mat4(1.0); // World matrix (rotation of cube by mouse)
 mat4 P_mat = mat4(1.0); // projection matrix
 
-//vec3 eye(2,10,-10);
-vec3 eye(4,7,-10);
-
-// test cube for EPIC RADO :D :D
-cube *test_cube;
+vec3 eye(2,10,-10);
 
 const int lvl_width = 7;
 const int lvl_height = 7;
-
-
-//const int lvl_width = 1;
-//const int lvl_height = 1;
 
 GLuint cube_width = 1;
 GLuint cube_height = 1;
@@ -54,7 +51,6 @@ char map[7][7] = {	{'#','#','#','#','#','#','#'},
 					{'#','#','.','.','.','.','#'},
 					{'#','#','#','#','#','#','#'}};
 
-//char map[1][1] = {{'#'}};
 
 cube * walls[lvl_height][lvl_width];
 
@@ -62,29 +58,12 @@ cube * walls[lvl_height][lvl_width];
 //openGL functions
 //==================
 
-inline void create_buffer(GLuint* vbo, size_t pts_size, const GLvoid * pts, size_t color_size, const GLvoid * color){
-	// example code to be replaced with project customized code
-	glGenBuffers(2, vbo); // generate buffers position, color
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-	glBufferData(GL_ARRAY_BUFFER, pts_size, pts, GL_STATIC_DRAW);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0) );
-
-	//color
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-	glBufferData(GL_ARRAY_BUFFER, color_size, color, GL_STATIC_DRAW);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0) );
-}
-
-
-
 void build_lvl(){
 	for (int i = 0; i < lvl_height; ++i) {
 		for (int j = 0; j < lvl_width; ++j) {
 			if (map[i][j]=='#') {//wall
 				walls[i][j] = new cube(program, 0);
-				walls[i][j]->translation = Translate((-1.0*lvl_width/2 + j)*cube_width, 0, (-1.0*lvl_height/2 + i)*cube_height);
+				walls[i][j]->translation = translate(vec3((-1.0*lvl_width/2 + j)*cube_width, 0, (-1.0*lvl_height/2 + i)*cube_height));
 			}else if(map[i][j] == '.'){	// empty
 				//nothing to do here :P
 			}
@@ -96,20 +75,20 @@ void init_buffers() {
 	// Initializing  VAOs and VBOs
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
-	test_cube = new cube(program, 0 );
 }
 
 
 void init(void) {
 
 	// Load shaders and use the resulting shader program
-	program = InitShader("vshader.glsl", "fshader.glsl");
+	program = init_shaders("vshader.glsl", "fshader.glsl");
 	glUseProgram(program);
-	build_lvl();
-	init_buffers();
 
-	V_mat = LookAt(eye, vec3(0,0,0), vec3(0,1,0));
-	P_mat = Perspective(45.0f, 1.0f*screen_width/screen_height, 1.0f, 100.0f);
+	init_buffers();
+	build_lvl();
+
+	V_mat = lookAt(eye, vec3(0,0,0), vec3(0,1,0));
+	P_mat = perspective(45.0f, 1.0f*screen_width/screen_height, 1.0f, 100.0f);
 
 	// matrices location in shader
 	P_loc = glGetUniformLocation(program, "P");
@@ -117,40 +96,35 @@ void init(void) {
 	M_loc = glGetUniformLocation(program, "M");
 	W_loc = glGetUniformLocation(program, "W");
 
-	glUniformMatrix4fv(P_loc, 1, GL_TRUE, P_mat);
-	glUniformMatrix4fv(V_loc, 1, GL_TRUE, V_mat);
-	glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
-	glUniformMatrix4fv(W_loc, 1, GL_TRUE, W_mat);
+	glUniformMatrix4fv(P_loc, 1, GL_FALSE, value_ptr(P_mat));
+	glUniformMatrix4fv(V_loc, 1, GL_FALSE, value_ptr(V_mat));
+	glUniformMatrix4fv(M_loc, 1, GL_FALSE, value_ptr(M_mat));
+	glUniformMatrix4fv(W_loc, 1, GL_FALSE, value_ptr(W_mat));
+
+	uniform_tex_sampler = glGetUniformLocation(program, "tex_sampler");
+	glUniform1i(uniform_tex_sampler, /*GL_TEXTURE*/ 0);
+
 
 	glClearColor(0.9, 0.9, 0.9, 1.0); // grey background :/ not sure about the color
 
 	glEnable(GL_DEPTH_TEST);// Enable depth test
 	glDepthFunc(GL_LESS);// Accept fragment if it closer to the camera than the former one
 
-
-	uniform_tex_sampler = glGetUniformLocation(program, "tex_sampler");
-	glUniform1i(uniform_tex_sampler, /*GL_TEXTURE*/ 0);
-
-
 }
 
 
 void display(void) {
-	glClear(GL_COLOR_BUFFER_BIT);     // clear the window//
+	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT); // clear the window//
 
 	glEnableVertexAttribArray(vao);
 	glBindVertexArray(vao);
 
 	// update rotation and translation matrices of each object before uploading to shader
-//	glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
-//	test_cube->draw();
-
-
 	for (int i = 0; i < lvl_height; ++i) {
 			for (int j = 0; j < lvl_width; ++j) {
 				if (map[i][j]=='#') {//wall
 					M_mat = walls[i][j]->translation * walls[i][j]->rotation;
-					glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
+					glUniformMatrix4fv(M_loc, 1, GL_FALSE, value_ptr(M_mat));
 					walls[i][j]->draw();
 				}else if(map[i][j] =='.'){ // empty
 					//nothing to do here :P
@@ -192,8 +166,8 @@ void onReshape(int width, int height) {
 	screen_width = width;
 	screen_height = height;
 	glViewport(0, 0, screen_width, screen_height);
-	P_mat = Perspective(45.0f, 1.0f*screen_width/screen_height, 1.0f, 100.0f);
-	glUniformMatrix4fv(P_loc, 1, GL_FALSE, P_mat);
+	P_mat = perspective(45.0f, 1.0f*screen_width/screen_height, 1.0f, 100.0f);
+	glUniformMatrix4fv(P_loc, 1, GL_FALSE, value_ptr(P_mat));
 }
 
 
@@ -229,16 +203,22 @@ void onMotion(int x, int y) {
 		cur_my = y;
 
 		if (cur_mx != last_mx || cur_my != last_my) {
-			eye = vec3(eye.x+(last_mx-cur_mx)/screen_width, eye.y+(last_my-cur_my)/screen_height, eye.z);
-			cout<<last_mx-cur_mx<<"  "<<last_my-cur_my<<endl;
+			vec3 va = get_arcball_vector(last_mx, last_my);
+			vec3 vb = get_arcball_vector( cur_mx,  cur_my);
+
+			// dot(va,vb) = ||va||.||vb||.cos(angle)
+			float angle = acos(  glm::min(1.0f, 1.0f*dot(va, vb)))*3;
+
+			vec3 axis_in_camera_coord = cross(va, vb);
+			mat3 camera2object = inverse(mat3(V_mat * W_mat));
+			vec3 axis_in_obj_coord =  camera2object * axis_in_camera_coord;
+			W_mat = rotate(W_mat, degrees(angle), axis_in_obj_coord);
 
 			last_mx = cur_mx;
 			last_my = cur_my;
 
-//			V_mat = LookAt(eye, vec3(0,0,0), vec3(0,1,0));
-
-//			glUniformMatrix4fv(V_loc, 1, GL_TRUE, V_mat);
-//			glutPostRedisplay();
+			glUniformMatrix4fv(W_loc, 1, false, value_ptr(W_mat));
+			glutPostRedisplay();
 		}
 	}
 }
