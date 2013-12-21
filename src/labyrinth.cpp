@@ -34,10 +34,14 @@ mat4 V_mat = mat4(1.0); // View matrix
 mat4 W_mat = mat4(1.0); // World matrix (rotation of cube by mouse)
 mat4 P_mat = mat4(1.0); // projection matrix
 
-vec3 eye(2,10,-10);
+vec3 eye(2,2,-5);
 
 const int lvl_width = 7;
 const int lvl_height = 7;
+
+//const int lvl_width = 1;
+//const int lvl_height = 1;
+
 
 GLuint cube_width = 1;
 GLuint cube_height = 1;
@@ -50,6 +54,9 @@ char map[7][7] = {	{'#','#','#','#','#','#','#'},
 					{'#','.','.','#','.','.','#'},
 					{'#','#','.','.','.','.','#'},
 					{'#','#','#','#','#','#','#'}};
+
+
+//char map[1][1] = {{'#'}};
 
 
 cube * walls[lvl_height][lvl_width];
