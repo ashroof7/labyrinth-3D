@@ -1,14 +1,6 @@
-/*
- * cube.cpp
- *
- *  Created on: Nov 25, 2013
- *      Author: leo
- */
-
 #include "cube.h"
 #include <iostream>
 using namespace std;
-
 
 GLfloat cube::side_vertices[] = {
 //				// front base cube
@@ -183,9 +175,8 @@ GLfloat cube::tex_coords[] ={
 
 };
 
-
 GLushort cube::base_elements[] = {
-		// front
+// front
 		0, 1, 2, 2, 3, 0,
 		// top
 		3, 2, 6, 6, 7, 3,
@@ -205,24 +196,26 @@ cube::cube(GLuint program, int offset_index) {
 	// base cube elements
 	glGenBuffers(1, &base_elements_ibo);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, base_elements_ibo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(base_elements), base_elements, GL_STATIC_DRAW);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(base_elements), base_elements,
+			GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); // why this line?!?!
 
 	// side vertices
 	glGenBuffers(1, &pos_vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, pos_vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(side_vertices), side_vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(side_vertices), side_vertices,
+			GL_STATIC_DRAW);
 
 	// based on the shader variable name
 	GLint pos_attrib = glGetAttribLocation(program, "vPosition");
 	glEnableVertexAttribArray(pos_attrib);
-	glVertexAttribPointer(pos_attrib, 3, GL_FLOAT, GL_FALSE, 0,  0);
+	glVertexAttribPointer(pos_attrib, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
 	// side colors
 	glGenBuffers(1, &col_vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, col_vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(side_colors), side_colors, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(side_colors), side_colors,
+			GL_STATIC_DRAW);
 
 	// based on the shader variable name
 	GLint col_attrib = glGetAttribLocation(program, "in_Color");
@@ -232,7 +225,8 @@ cube::cube(GLuint program, int offset_index) {
 	// textures
 	glGenBuffers(1, &tex_coord);
 	glBindBuffer(GL_ARRAY_BUFFER, tex_coord);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(tex_coords), tex_coords, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(tex_coords), tex_coords,
+			GL_STATIC_DRAW);
 
 	GLint tex_attrib = glGetAttribLocation(program, "in_texcoord");
 	glEnableVertexAttribArray(tex_attrib);
@@ -240,7 +234,8 @@ cube::cube(GLuint program, int offset_index) {
 
 	glGenTextures(1, &texture_id);
 	glBindTexture(GL_TEXTURE_2D, texture_id);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wood_image.width, wood_image.height, 0, GL_RGB, GL_UNSIGNED_BYTE, wood_image.pixel_data);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wood_image.width, wood_image.height,
+			0, GL_RGB, GL_UNSIGNED_BYTE, wood_image.pixel_data);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 }
 
@@ -255,11 +250,11 @@ cube::~cube() {
 	glDeleteTextures(1, &texture_id);
 }
 
-
-void cube::draw(){
+void cube::draw() {
 	//	 draw base using buffer element
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, base_elements_ibo);
-	GLint size;  glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+	GLint size;
+	glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texture_id);
 //		glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
