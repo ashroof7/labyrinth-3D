@@ -1,5 +1,3 @@
-
-
 #include "include/Angel.h"
 #include "cube.h"
 
@@ -11,6 +9,11 @@
 
 using namespace std;
 using namespace Angel;
+
+//mouse state variables
+int last_mx = 0, last_my = 0, cur_mx = 0, cur_my = 0;
+int arcball_on = false;
+
 
 GLfloat screen_width = 600;
 GLfloat screen_height = 600;
@@ -26,7 +29,8 @@ mat4 V_mat = mat4(1.0); // View matrix
 mat4 W_mat = mat4(1.0); // World matrix (rotation of cube by mouse)
 mat4 P_mat = mat4(1.0); // projection matrix
 
-vec3 eye(2,10,-10);
+//vec3 eye(2,10,-10);
+vec3 eye(4,7,-10);
 
 // test cube for EPIC RADO :D :D
 cube *test_cube;
@@ -34,15 +38,23 @@ cube *test_cube;
 const int lvl_width = 7;
 const int lvl_height = 7;
 
-char map[7][7] = {{'#','#','#','#','#','#','#'},
-				{'#','.','.','.','.','.','#'},
-				{'#','.','.','#','.','.','#'},
-				{'#','.','#','#','#','.','#'},
-				{'#','.','.','#','.','.','#'},
-				{'#','.','.','.','.','.','#'},
-				{'#','#','#','#','#','#','#'}};
 
+//const int lvl_width = 1;
+//const int lvl_height = 1;
 
+GLuint cube_width = 1;
+GLuint cube_height = 1;
+GLuint uniform_tex_sampler;
+
+char map[7][7] = {	{'#','#','#','#','#','#','#'},
+					{'#','.','.','#','.','.','#'},
+					{'#','#','.','#','.','.','#'},
+					{'#','.','#','#','#','#','#'},
+					{'#','.','.','#','.','.','#'},
+					{'#','#','.','.','.','.','#'},
+					{'#','#','#','#','#','#','#'}};
+
+//char map[1][1] = {{'#'}};
 
 cube * walls[lvl_height][lvl_width];
 
@@ -66,8 +78,6 @@ inline void create_buffer(GLuint* vbo, size_t pts_size, const GLvoid * pts, size
 }
 
 
-GLuint cube_width = 2;
-GLuint cube_height = 2;
 
 void build_lvl(){
 	for (int i = 0; i < lvl_height; ++i) {
@@ -116,6 +126,12 @@ void init(void) {
 
 	glEnable(GL_DEPTH_TEST);// Enable depth test
 	glDepthFunc(GL_LESS);// Accept fragment if it closer to the camera than the former one
+
+
+	uniform_tex_sampler = glGetUniformLocation(program, "tex_sampler");
+	glUniform1i(uniform_tex_sampler, /*GL_TEXTURE*/ 0);
+
+
 }
 
 
@@ -169,9 +185,6 @@ void keyboard_special(int key, int x, int y) {
 	}
 }
 
-void onMouse(int button, int state, int x, int y) {
-}
-
 void onPassiveMotion(int x, int y) {
 }
 
@@ -182,6 +195,54 @@ void onReshape(int width, int height) {
 	P_mat = Perspective(45.0f, 1.0f*screen_width/screen_height, 1.0f, 100.0f);
 	glUniformMatrix4fv(P_loc, 1, GL_FALSE, P_mat);
 }
+
+
+vec3 get_arcball_vector(int x, int y) {
+	//	convert the x,y screen coordinates to [-1,1] coordinates (and reverse y coordinates)
+	vec3 P = vec3(1.0*x/screen_width*2 - 1.0, 	1.0*y/screen_height*2 - 1.0, 	0);
+	P.y = -P.y;
+
+	float OP_squared = P.x * P.x + P.y * P.y;
+	// use Pythagorean theorem to get P.z
+	if (OP_squared <= 1*1)
+		P.z = sqrt(1*1 - OP_squared);  // Pythagore
+	else
+		P = normalize(P);  // nearest point
+
+	return P;
+}
+
+
+void onMouse(int button, int state, int x, int y) {
+	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
+		arcball_on = true;
+		last_mx = cur_mx = x;
+		last_my = cur_my = y;
+	} else {
+		arcball_on = false;
+	}
+}
+
+void onMotion(int x, int y) {
+	if (arcball_on) {  // if left button is pressed
+		cur_mx = x;
+		cur_my = y;
+
+		if (cur_mx != last_mx || cur_my != last_my) {
+			eye = vec3(eye.x+(last_mx-cur_mx)/screen_width, eye.y+(last_my-cur_my)/screen_height, eye.z);
+			cout<<last_mx-cur_mx<<"  "<<last_my-cur_my<<endl;
+
+			last_mx = cur_mx;
+			last_my = cur_my;
+
+//			V_mat = LookAt(eye, vec3(0,0,0), vec3(0,1,0));
+
+//			glUniformMatrix4fv(V_loc, 1, GL_TRUE, V_mat);
+//			glutPostRedisplay();
+		}
+	}
+}
+
 
 //=========
 //main loop
@@ -209,8 +270,10 @@ int main(int argc, char **argv) {
 	glutKeyboardFunc(keyboard);
 	glutSpecialFunc(keyboard_special);
 	glutMouseFunc(onMouse);
-	glutPassiveMotionFunc(onPassiveMotion);
+	glutMotionFunc(onMotion);
 	glutReshapeFunc(onReshape);
+
+
 
 	glutMainLoop();
 	return 0;

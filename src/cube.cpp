@@ -11,41 +11,55 @@ using namespace std;
 
 
 GLfloat cube::side_vertices[] = {
-		// front base cube
-		-1.0, -1.0,  1.0,
-		 1.0, -1.0,  1.0,
-		 1.0,  1.0,  1.0,
-		-1.0,  1.0,  1.0,
-		// back base cube
-		-1.0, -1.0, -1.0,
-		 1.0, -1.0, -1.0,
-		 1.0,  1.0, -1.0,
-		-1.0,  1.0, -1.0,
+				// front base cube
+				-0.5, -0.5,  0.5,
+				 0.5, -0.5,  0.5,
+				 0.5,  0.5,  0.5,
+				-0.5,  0.5,  0.5,
+				// back base cube
+				-0.5, -0.5, -0.5,
+				 0.5, -0.5, -0.5,
+				 0.5,  0.5, -0.5,
+				-0.5,  0.5, -0.5,
 };
 
 GLfloat cube::side_colors[] = {
-//		// front base cube
-//		0.0, 0.0, 0.0,
-//		0.0, 0.0, 0.0,
-//		0.0, 0.0, 0.0,
-//		0.0, 0.0, 0.0,
-//		// back base cube
-//		0.0, 0.0, 0.0,
-//		0.0, 0.0, 0.0,
-//		0.0, 0.0, 0.0,
-//		0.0, 0.0, 0.0,
+				// front base cube
+				1.0, 1.0, 1.0, 0.0,
+				1.0, 1.0, 1.0, 0.0,
+				1.0, 1.0, 1.0, 0.0,
+				1.0, 1.0, 1.0, 0.0,
+				// back base cube
+				1.0, 1.0, 1.0, 0.0,
+				1.0, 1.0, 1.0, 0.0,
+				1.0, 1.0, 1.0, 0.0,
+				1.0, 1.0, 1.0, 0.0,
 
-// any mixture for debugging
-		// front base cube
-		0.0, 1.0, 0.0,  //green
-		1.0, 1.0, 0.0,  //yellow
-		1.0, 0.5, 0.0, //orange
-		1.0, 0.0, 0.0,  //red
-		// back base cube
-		0.0, 1.0, 0.0,  //green
-		0.0, 0.0, 1.0,  //blue
-		1.0, 0.5, 0.0, //orange
-		0.0, 0.0, 0.0, //black
+//				// any mixture for debugging
+//				// front base cube
+//				0.0, 1.0, 0.0,  //green
+//				1.0, 1.0, 0.0,  //yellow
+//				1.0, 0.5, 0.0, //orange
+//				1.0, 0.0, 0.0,  //red
+//				// back base cube
+//				0.0, 1.0, 0.0,  //green
+//				0.0, 0.0, 1.0,  //blue
+//				1.0, 0.5, 0.0, //orange
+//				0.0, 0.0, 0.0, //black
+
+};
+
+GLfloat cube::tex_coords[] ={
+				// front base cube
+				1.0, 1.0,
+				1.0, 0.0,
+				0.0, 0.0,
+				0.0, 1.0,
+				// back base cube
+				1.0, 1.0,
+				1.0, 0.0,
+				0.0, 0.0,
+				0.0, 1.0,
 };
 
 GLushort cube::base_elements[] = {
@@ -91,45 +105,44 @@ cube::cube(GLuint program, int offset_index) {
 	// based on the shader variable name
 	GLint col_attrib = glGetAttribLocation(program, "in_Color");
 	glEnableVertexAttribArray(col_attrib);
-	glVertexAttribPointer(col_attrib, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glVertexAttribPointer(col_attrib, 4, GL_FLOAT, GL_FALSE, 0, 0);
 
 	// textures
-	texture_id = -1;
-//	glGenTextures(1, &texture_id);
-//	glBindTexture(GL_TEXTURE_2D, texture_id);
-//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-//
-//	glTexImage2D(GL_TEXTURE_2D, // target
-//		       0,  // level, 0 = base, no minimap,
-//		       GL_RGB, // internalformat
-//		       wood_texture.width,  // width
-//		       wood_texture.height,  // height
-//		       0,  // border, always 0 in OpenGL ES
-//		       GL_RGB,  // format
-//		       GL_UNSIGNED_BYTE, // type
-//		       wood_texture.pixel_data);
+	glGenBuffers(1, &tex_coord);
+	glBindBuffer(GL_ARRAY_BUFFER, tex_coord);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(tex_coords), tex_coords, GL_STATIC_DRAW);
+
+	GLint tex_attrib = glGetAttribLocation(program, "in_texcoord");
+	glEnableVertexAttribArray(tex_attrib);
+	glVertexAttribPointer(tex_attrib, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glGenTextures(1, &texture_id);
+	glBindTexture(GL_TEXTURE_2D, texture_id);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wood_image.width, wood_image.height, 0, GL_RGB, GL_UNSIGNED_BYTE, wood_image.pixel_data);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 }
 
 cube::cube() {
-	col_vbo = pos_vbo = base_elements_ibo = texture_id = -1;
+	col_vbo = pos_vbo = base_elements_ibo = texture_id = tex_coord = -1;
 }
 
 cube::~cube() {
 	glDeleteBuffers(1, &pos_vbo);
 	glDeleteBuffers(1, &col_vbo);
 	glDeleteBuffers(1, &base_elements_ibo);
-//	glDeleteTextures(1, &texture_id);
+	glDeleteTextures(1, &texture_id);
 }
+
 
 void cube::draw(){
 	//	 draw base using buffer element
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, base_elements_ibo);
 	GLint size;  glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-	glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture_id);
+		glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
+//	glDrawArrays(GL_TRIANGLES, 0,36);
 
-//	glActiveTexture(GL_TEXTURE0);
-//	glBindTexture(GL_TEXTURE_2D, texture_id);
-//	uniform_wood_texture = glGetUniformLocation(program, "wood_texture");
-//	glUniform1i(uniform_wood_texture, /*GL_TEXTURE*/0);
+
 
 }
