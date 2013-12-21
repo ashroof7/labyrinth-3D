@@ -143,6 +143,4 @@ void cube::draw(){
 		glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
 //	glDrawArrays(GL_TRIANGLES, 0,36);
 
-
-
 }
