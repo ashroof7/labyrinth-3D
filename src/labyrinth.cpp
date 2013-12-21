@@ -1,6 +1,6 @@
 #include "include/Angel.h"
 #include "cube.h"
-
+#include "ball.h"
 #include <iostream>
 #include <time.h>
 #include <sys/time.h>
@@ -37,9 +37,6 @@ cube *test_cube;
 const int lvl_width = 7;
 const int lvl_height = 7;
 
-//const int lvl_width = 1;
-//const int lvl_height = 1;
-
 GLuint cube_width = 1;
 GLuint cube_height = 1;
 GLuint uniform_tex_sampler;
@@ -53,7 +50,7 @@ char map[7][7] = { { '#', '#', '#', '#', '#', '#', '#' }, { '#', '.', '.', '#',
 //char map[1][1] = {{'#'}};
 
 cube * walls[lvl_height][lvl_width];
-
+ball * _ball;
 //==================
 //openGL functions
 //==================
@@ -87,10 +84,14 @@ void build_lvl() {
 			}
 		}
 	}
+	_ball = new ball(program,0.3, 1, 1);
+	_ball->translation = Translate(
+			(-1.0 * lvl_width / 2 + _ball->i) * cube_width, 0,
+			(-1.0 * lvl_height / 2 + _ball->j) * cube_height);
 }
 
 void init_buffers() {
-	// Initializing  VAOs and VBOs
+// Initializing  VAOs and VBOs
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
 	test_cube = new cube(program, 0);
@@ -98,7 +99,7 @@ void init_buffers() {
 
 void init(void) {
 
-	// Load shaders and use the resulting shader program
+// Load shaders and use the resulting shader program
 	program = InitShader("vshader.glsl", "fshader.glsl");
 	glUseProgram(program);
 	build_lvl();
@@ -108,7 +109,7 @@ void init(void) {
 	P_mat = Perspective(45.0f, 1.0f * screen_width / screen_height, 1.0f,
 			100.0f);
 
-	// matrices location in shader
+// matrices location in shader
 	P_loc = glGetUniformLocation(program, "P");
 	V_loc = glGetUniformLocation(program, "V");
 	M_loc = glGetUniformLocation(program, "M");
@@ -135,7 +136,7 @@ void display(void) {
 	glEnableVertexAttribArray(vao);
 	glBindVertexArray(vao);
 
-	// update rotation and translation matrices of each object before uploading to shader
+// update rotation and translation matrices of each object before uploading to shader
 //	glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
 //	test_cube->draw();
 
@@ -150,7 +151,9 @@ void display(void) {
 			}
 		}
 	}
-
+	M_mat = _ball->translation;
+	glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
+	_ball->draw();
 	glDisableVertexAttribArray(vao);
 	glutSwapBuffers(); // Double buffering
 }
@@ -190,13 +193,13 @@ void onReshape(int width, int height) {
 }
 
 vec3 get_arcball_vector(int x, int y) { // what is the purpose of this method?
-	//	convert the x,y screen coordinates to [-1,1] coordinates (and reverse y coordinates)
+//	convert the x,y screen coordinates to [-1,1] coordinates (and reverse y coordinates)
 	vec3 P = vec3(1.0 * x / screen_width * 2 - 1.0,
 			1.0 * y / screen_height * 2 - 1.0, 0);
 	P.y = -P.y;
 
 	float OP_squared = P.x * P.x + P.y * P.y;
-	// use Pythagorean theorem to get P.z
+// use Pythagorean theorem to get P.z
 	if (OP_squared <= 1 * 1)
 		P.z = sqrt(1 * 1 - OP_squared);  // Pythagore
 	else
@@ -250,13 +253,13 @@ int main(int argc, char **argv) {
 	glutInitDisplayMode(GLUT_RGBA | GLUT_MULTISAMPLE);
 	glutInitWindowSize(screen_width, screen_height);
 
-	//----------------------------------------
-	// If you are using freeglut, the next two lines will check if
-	// the code is truly 3.2. Otherwise, comment them out
+//----------------------------------------
+// If you are using freeglut, the next two lines will check if
+// the code is truly 3.2. Otherwise, comment them out
 
-	//glutInitContextVersion( 3, 2 );
-	//glutInitContextProfile( GLUT_CORE_PROFILE );
-	//----------------------------------------
+//glutInitContextVersion( 3, 2 );
+//glutInitContextProfile( GLUT_CORE_PROFILE );
+//----------------------------------------
 
 	glutCreateWindow("Labyrinth :D");
 	glewInit();

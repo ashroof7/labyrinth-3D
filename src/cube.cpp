@@ -1,10 +1,3 @@
-/*
- * cube.cpp
- *
- *  Created on: Nov 25, 2013
- *      Author: leo
- */
-
 #include "cube.h"
 #include <iostream>
 using namespace std;
