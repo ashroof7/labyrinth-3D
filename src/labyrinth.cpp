@@ -45,7 +45,7 @@ GLuint uniform_tex_sampler;
 float xangle = 0;
 float zangle = 0;
 char map[7][7] = { { '#', '#', '#', '#', '#', '#', '#' }, { '#', '.', '.', '#',
-		'.', '.', '#' }, { '#', '#', '.', '#', '.', '.', '#' }, { '#', '.', '#',
+		'.', '.', '#' }, { '#', '.', '.', '#', '.', '.', '#' }, { '#', '.', '#',
 		'#', '#', '#', '#' }, { '#', '.', '.', '#', '.', '.', '#' }, { '#', '#',
 		'.', '.', '.', '.', '#' }, { '#', '#', '#', '#', '#', '#', '#' } };
 
@@ -234,7 +234,7 @@ void onMotion(int x, int y) {
 				zangle -= (last_my - cur_my) / 5.0;
 
 			W_mat = RotateX(xangle) * RotateZ(zangle);
-			cout << last_mx - cur_mx << "  " << last_my - cur_my << endl;
+//			cout << last_mx - cur_mx << "  " << last_my - cur_my << endl;
 			last_mx = cur_mx;
 			last_my = cur_my;
 
@@ -244,7 +244,28 @@ void onMotion(int x, int y) {
 	}
 }
 void animate(int n) {
-	_ball->translation *= Translate(-zangle / 100.0, 0, xangle / 100.0);
+	mat4 tmp = _ball->translation;
+	tmp *= Translate(-zangle / 100.0, 0, 0);
+	vec4 pos = tmp * vec3(0, 0, 0);
+	pos[0] += lvl_width / 2.0;
+	pos[2] += lvl_height / 2.0;
+	cout << pos[2] << " " << pos[0] << endl;
+	if (map[(int) (pos[2] + 0.3)][(int) (pos[0] + 0.3)] == '#'
+			|| map[(int) ceil(pos[2] - 0.3)][(int) ceil(pos[0] - 0.3)] == '#') {
+		tmp = _ball->translation;
+		cout << "xx " << (int) pos[2] << " " << (int) pos[0] << endl;
+	}
+	mat4 tt = tmp;
+	tmp *= Translate(0, 0, xangle / 100.0);
+	pos = tmp * vec3(0, 0, 0);
+	pos[0] += lvl_height / 2.0;
+	pos[2] += lvl_width / 2.0;
+//	cout << pos[2] << " " << pos[0] << endl;
+	if (map[(int) (pos[2] + 0.3)][(int) (pos[0] + 0.3)] == '#'
+			|| map[(int) ceil(pos[2] - 0.3)][(int) ceil(pos[0] - 0.3)] == '#') {
+		tmp = tt;
+	}
+	_ball->translation = tmp;
 	display();
 	glutTimerFunc(TIMERMSECS, animate, 0);
 }
