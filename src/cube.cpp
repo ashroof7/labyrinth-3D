@@ -218,7 +218,7 @@ cube::cube(GLuint program, int offset_index) {
 			GL_STATIC_DRAW);
 
 	// based on the shader variable name
-	GLint col_attrib = glGetAttribLocation(program, "in_Color");
+	GLint col_attrib = glGetAttribLocation(program, "gl_Color");
 	glEnableVertexAttribArray(col_attrib);
 	glVertexAttribPointer(col_attrib, 4, GL_FLOAT, GL_FALSE, 0, 0);
 

@@ -23,7 +23,8 @@ GLuint program;
 GLuint vao;
 
 GLuint P_loc, M_loc, V_loc, W_loc; // locations pointers of P, M, V, W matrices in shader
-
+GLuint A_loc, D_loc, S_loc, Shine_loc;
+GLuint shape_type_loc;
 mat4 I_mat = mat4(1.0); // Identity matrix
 mat4 M_mat = mat4(1.0); // Model matrix
 mat4 V_mat = mat4(1.0); // View matrix
@@ -45,9 +46,10 @@ GLuint uniform_tex_sampler;
 float xangle = 0;
 float zangle = 0;
 char map[7][7] = { { '#', '#', '#', '#', '#', '#', '#' }, { '#', '.', '.', '#',
-		'.', '.', '#' }, { '#', '.', '.', '#', '.', '.', '#' }, { '#', '.', '#',
-		'#', '#', '#', '#' }, { '#', '.', '.', '#', '.', '.', '#' }, { '#', '#',
-		'.', '.', '.', '.', '#' }, { '#', '#', '#', '#', '#', '#', '#' } };
+		'.', '.', '#' }, { '#', '.', '.', '#', '.', '.', '#' }, { '#', '.',
+		'#', '#', '#', '#', '#' }, { '#', '.', '.', '#', '.', '.', '#' }, {
+		'#', '#', '.', '.', '.', '.', '#' }, { '#', '#', '#', '#', '#', '#',
+		'#' } };
 
 //char map[1][1] = {{'#'}};
 
@@ -64,13 +66,13 @@ inline void create_buffer(GLuint* vbo, size_t pts_size, const GLvoid * pts,
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 	glBufferData(GL_ARRAY_BUFFER, pts_size, pts, GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0) );
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
 
 	//color
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
 	glBufferData(GL_ARRAY_BUFFER, color_size, color, GL_STATIC_DRAW);
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0) );
+	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
 }
 
 void build_lvl() {
@@ -78,22 +80,21 @@ void build_lvl() {
 		for (int j = 0; j < lvl_width; ++j) {
 			if (map[i][j] == '#') { //wall
 				walls[i][j] = new cube(program, 0);
-				walls[i][j]->translation = Translate(
-						(-1.0 * lvl_width / 2 + j) * cube_width, 0,
-						(-1.0 * lvl_height / 2 + i) * cube_height);
-			} else if (map[i][j] == '.') {	// empty
+				walls[i][j]->translation = Translate((-1.0 * lvl_width / 2 + j)
+						* cube_width, 0, (-1.0 * lvl_height / 2 + i)
+						* cube_height);
+			} else if (map[i][j] == '.') { // empty
 				//nothing to do here :P
 			}
 		}
 	}
 	_ball = new ball(program, 0.3, 1, 1);
-	_ball->translation = Translate(
-			(-1.0 * lvl_width / 2 + _ball->i) * cube_width, 0,
-			(-1.0 * lvl_height / 2 + _ball->j) * cube_height);
+	_ball->translation = Translate((-1.0 * lvl_width / 2 + _ball->i)
+			* cube_width, 0, (-1.0 * lvl_height / 2 + _ball->j) * cube_height);
 }
 
 void init_buffers() {
-// Initializing  VAOs and VBOs
+	// Initializing  VAOs and VBOs
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
 	test_cube = new cube(program, 0);
@@ -101,7 +102,7 @@ void init_buffers() {
 
 void init(void) {
 
-// Load shaders and use the resulting shader program
+	// Load shaders and use the resulting shader program
 	program = InitShader("vshader.glsl", "fshader.glsl");
 	glUseProgram(program);
 	build_lvl();
@@ -111,18 +112,23 @@ void init(void) {
 	P_mat = Perspective(45.0f, 1.0f * screen_width / screen_height, 1.0f,
 			100.0f);
 
-// matrices location in shader
+	// matrices location in shader
 	P_loc = glGetUniformLocation(program, "P");
 	V_loc = glGetUniformLocation(program, "V");
 	M_loc = glGetUniformLocation(program, "M");
 	W_loc = glGetUniformLocation(program, "W");
+	A_loc = glGetUniformLocation(program, "AmbientProduct");
+	D_loc = glGetUniformLocation(program, "DiffuseProduct");
+	S_loc = glGetUniformLocation(program, "SpecularProduct");
+	Shine_loc = glGetUniformLocation(program, "Shininess");
+	shape_type_loc = glGetUniformLocation(program, "shapeType");
 
 	glUniformMatrix4fv(P_loc, 1, GL_TRUE, P_mat);
 	glUniformMatrix4fv(V_loc, 1, GL_TRUE, V_mat);
 	glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
 	glUniformMatrix4fv(W_loc, 1, GL_TRUE, W_mat);
 
-	glClearColor(1, 1, 1, 1.0); // grey background :/ not sure about the color
+	glClearColor(0.0, 0.0, 0.0, 1.0); // black background
 
 	glEnable(GL_DEPTH_TEST); // Enable depth test
 	glDepthFunc(GL_LESS); // Accept fragment if it closer to the camera than the former one
@@ -131,17 +137,46 @@ void init(void) {
 	glUniform1i(uniform_tex_sampler, /*GL_TEXTURE*/0);
 
 }
+void bufferBeforeDrawCube() {
+	vec4 ambient = vec4(0.9, 0.9, 0.0, 1.0);
+	vec4 diffuse = vec4(0.6, 0.6, 0.0, 0.0);
+	vec4 specular = vec4(0.0, 0.0, 0.0, 0.0);
+	GLfloat my_shine = 1000;
+	GLint my_shape_type = 1;
+	glUniform1i(shape_type_loc, my_shape_type);
+	glUniform1f(Shine_loc, my_shine);
+	glUniform4fv(A_loc, 1, (GLfloat*)&ambient);
+	glUniform4fv(D_loc, 1, (GLfloat*)&diffuse);
+	glUniform4fv(S_loc, 1, (GLfloat*)&specular);
+}
+void bufferBeforeDrawBall() {
+	vec4 ambient = vec4(0.7, 0.7, 0.7, 0.5);
+	vec4 diffuse = vec4(0.7, 0.7, 0.7, 1.0);
+	vec4 specular = vec4(1.0, 1.0, 1.0, 0.0);
+	GLfloat my_shine = 500;
+	GLint my_shape_type = 0;
+	glUniform1i(shape_type_loc, my_shape_type);
+	glUniform1f(Shine_loc, my_shine);
+	glUniform4fv(A_loc, 1, (GLfloat*)&ambient);
+	glUniform4fv(D_loc, 1, (GLfloat*)&diffuse);
+	glUniform4fv(S_loc, 1, (GLfloat*)&specular);
+}
+void bufferBeforeDrawHole() {
 
+}
+void bufferBeforeDrawSufrace() {
+
+}
 void display(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the window//
 
 	glEnableVertexAttribArray(vao);
 	glBindVertexArray(vao);
 
-// update rotation and translation matrices of each object before uploading to shader
-//	glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
-//	test_cube->draw();
-
+	// update rotation and translation matrices of each object before uploading to shader
+	//	glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
+	//	test_cube->draw();
+	bufferBeforeDrawCube();
 	for (int i = 0; i < lvl_height; ++i) {
 		for (int j = 0; j < lvl_width; ++j) {
 			if (map[i][j] == '#') { //wall
@@ -153,6 +188,7 @@ void display(void) {
 			}
 		}
 	}
+	bufferBeforeDrawBall();
 	M_mat = _ball->translation;
 	glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
 	_ball->draw();
@@ -196,16 +232,16 @@ void onReshape(int width, int height) {
 
 vec3 get_arcball_vector(int x, int y) { // what is the purpose of this method?
 //	convert the x,y screen coordinates to [-1,1] coordinates (and reverse y coordinates)
-	vec3 P = vec3(1.0 * x / screen_width * 2 - 1.0,
-			1.0 * y / screen_height * 2 - 1.0, 0);
+	vec3 P = vec3(1.0 * x / screen_width * 2 - 1.0, 1.0 * y / screen_height * 2
+			- 1.0, 0);
 	P.y = -P.y;
 
 	float OP_squared = P.x * P.x + P.y * P.y;
-// use Pythagorean theorem to get P.z
+	// use Pythagorean theorem to get P.z
 	if (OP_squared <= 1 * 1)
-		P.z = sqrt(1 * 1 - OP_squared);  // Pythagore
+		P.z = sqrt(1 * 1 - OP_squared); // Pythagore
 	else
-		P = normalize(P);  // nearest point
+		P = normalize(P); // nearest point
 
 	return P;
 }
@@ -221,7 +257,7 @@ void onMouse(int button, int state, int x, int y) {
 }
 
 void onMotion(int x, int y) {
-	if (arcball_on) {  // if left button is pressed
+	if (arcball_on) { // if left button is pressed
 		cur_mx = x;
 		cur_my = y;
 
@@ -234,7 +270,7 @@ void onMotion(int x, int y) {
 				zangle -= (last_my - cur_my) / 3.0;
 
 			W_mat = RotateX(xangle) * RotateZ(zangle);
-//			cout << last_mx - cur_mx << "  " << last_my - cur_my << endl;
+			//			cout << last_mx - cur_mx << "  " << last_my - cur_my << endl;
 			last_mx = cur_mx;
 			last_my = cur_my;
 
@@ -253,7 +289,7 @@ void animate(int n) {
 	pos = tmp * vec3(0, 0, 0);
 	pos[0] += lvl_width / 2.0;
 	pos[2] += lvl_height / 2.0;
-//	cout << speedx << " "<< speedz << endl;
+	//	cout << speedx << " "<< speedz << endl;
 	if (map[(int) ceil(pos[2] - 0.3)][(int) floor(pos[0] + 0.3)] == '#'
 			|| map[(int) floor(pos[2] + 0.3)][(int) ceil(pos[0] - 0.3)] == '#'
 			|| map[(int) floor(pos[2] + 0.3)][(int) floor(pos[0] + 0.3)] == '#'
@@ -292,13 +328,13 @@ int main(int argc, char **argv) {
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
 	glutInitWindowSize(screen_width, screen_height);
 
-//----------------------------------------
-// If you are using freeglut, the next two lines will check if
-// the code is truly 3.2. Otherwise, comment them out
+	//----------------------------------------
+	// If you are using freeglut, the next two lines will check if
+	// the code is truly 3.2. Otherwise, comment them out
 
-//glutInitContextVersion( 3, 2 );
-//glutInitContextProfile( GLUT_CORE_PROFILE );
-//----------------------------------------
+	//glutInitContextVersion( 3, 2 );
+	//glutInitContextProfile( GLUT_CORE_PROFILE );
+	//----------------------------------------
 
 	glutCreateWindow("Labyrinth :D");
 	glewInit();
