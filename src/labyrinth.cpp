@@ -279,7 +279,8 @@ void animate(int n) {
 int main(int argc, char **argv) {
 
 	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_RGBA | GLUT_MULTISAMPLE);
+	glEnable(GL_DEPTH_TEST);
+	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
 	glutInitWindowSize(screen_width, screen_height);
 
 //----------------------------------------
