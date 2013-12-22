@@ -10,7 +10,7 @@
 using namespace std;
 using namespace Angel;
 
-const int TIMERMSECS = 100;
+int TIMERMSECS = 100;
 
 //mouse state variables
 int last_mx = 0, last_my = 0, cur_mx = 0, cur_my = 0;
@@ -229,9 +229,9 @@ void onMotion(int x, int y) {
 			xangle += (last_mx - cur_mx) / 5.0;
 			zangle += (last_my - cur_my) / 5.0;
 			if (abs(xangle) > 30)
-				xangle -= (last_mx - cur_mx) / 5.0;
+				xangle -= (last_mx - cur_mx) / 3.0;
 			if (abs(zangle) > 30)
-				zangle -= (last_my - cur_my) / 5.0;
+				zangle -= (last_my - cur_my) / 3.0;
 
 			W_mat = RotateX(xangle) * RotateZ(zangle);
 //			cout << last_mx - cur_mx << "  " << last_my - cur_my << endl;
@@ -243,22 +243,28 @@ void onMotion(int x, int y) {
 		}
 	}
 }
+float speedz = 0;
+float speedx = 0;
+
 void animate(int n) {
 	mat4 tmp = _ball->translation;
 	vec4 pos = tmp * vec3(0, 0, 0);
-	tmp *= Translate(-zangle / 100.0, 0, 0);
+	tmp *= Translate(speedz, 0, 0);
 	pos = tmp * vec3(0, 0, 0);
 	pos[0] += lvl_width / 2.0;
 	pos[2] += lvl_height / 2.0;
-	cout << pos[2] << " " << pos[0] << endl;
+//	cout << speedx << " "<< speedz << endl;
 	if (map[(int) ceil(pos[2] - 0.3)][(int) floor(pos[0] + 0.3)] == '#'
 			|| map[(int) floor(pos[2] + 0.3)][(int) ceil(pos[0] - 0.3)] == '#'
 			|| map[(int) floor(pos[2] + 0.3)][(int) floor(pos[0] + 0.3)] == '#'
 			|| map[(int) ceil(pos[2] - 0.3)][(int) ceil(pos[0] - 0.3)] == '#') {
 		tmp = _ball->translation;
+		speedz = 0;
+	} else {
+		speedz += -zangle / 500.0;
 	}
 	mat4 tt = tmp;
-	tmp *= Translate(0, 0, xangle / 100.0);
+	tmp *= Translate(0, 0, speedx);
 	pos = tmp * vec3(0, 0, 0);
 	pos[0] += lvl_height / 2.0;
 	pos[2] += lvl_width / 2.0;
@@ -267,6 +273,9 @@ void animate(int n) {
 			|| map[(int) floor(pos[2] + 0.3)][(int) floor(pos[0] + 0.3)] == '#'
 			|| map[(int) ceil(pos[2] - 0.3)][(int) ceil(pos[0] - 0.3)] == '#') {
 		tmp = tt;
+		speedx = 0;
+	} else {
+		speedx += xangle / 500.0;
 	}
 	_ball->translation = tmp;
 	display();
