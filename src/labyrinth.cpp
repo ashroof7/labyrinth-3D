@@ -174,9 +174,12 @@ void init(void) {
 }
 
 void bufferBeforeDrawCube() {
+//	vec4 ambient = vec4(0.8, 0.8, 0.8, 1.0);
+//	vec4 diffuse = vec4(0.2, 0.2, 0.2, 1.0);
+//	vec4 specular = vec4(5.0, 5.0, 5.0, 0.0);
 	vec4 ambient = vec4(0.8, 0.8, 0.8, 1.0);
 	vec4 diffuse = vec4(0.2, 0.2, 0.2, 1.0);
-	vec4 specular = vec4(5.0, 5.0, 5.0, 0.0);
+	vec4 specular = vec4(0.0, 0.0, 0.0, 0.0);
 	GLfloat my_shine = 1000;
 	GLint my_shape_type = 1;
 	glUniform1i(shape_type_loc, my_shape_type);
