@@ -364,32 +364,30 @@ void ball_fall_check() {
 	vec4 pos = _ball->translation * vec3(0, 0, 0);
 	pos[0] += lvl_width / 2.0;
 	pos[2] += lvl_height / 2.0;
-
 	if (map[(int) pos[2]][(int) pos[0]] == 'O') {
 		falling = true;
 		falling_cnt = 1000 / TIMERMSECS;
 	} else if (map[(int) pos[2]][(int) pos[0]] == 'T') {
 		win = true;
 		win_cnt = 4 * 1000 / TIMERMSECS;
-		cout << "sadf" << endl;
 	}
 }
-
+void reset() {
+	falling = win = false;
+	xangle = zangle = speedx = speedz = 0;
+	W_mat = RotateX(0) * RotateZ(0);
+	_ball->translation = Translate((-1.0 * lvl_width / 2 + 1) * cube_width, 0,
+			(-1.0 * lvl_height / 2 + 1) * cube_height);
+	glUniformMatrix4fv(W_loc, 1, GL_TRUE, W_mat);
+}
 void animate(int n) {
 	if (falling) {
 		falling_cnt--;
 		_ball->translation *= Translate(0, -0.1, 0);
 		display();
 		glutTimerFunc(TIMERMSECS, animate, 0);
-		if (falling_cnt == 0) {
-			falling = false;
-			xangle = zangle = speedx = speedz = 0;
-			W_mat = RotateX(0) * RotateZ(0);
-			_ball->translation = Translate(
-					(-1.0 * lvl_width / 2 + 1) * cube_width, 0,
-					(-1.0 * lvl_height / 2 + 1) * cube_height);
-			glUniformMatrix4fv(W_loc, 1, GL_TRUE, W_mat);
-		}
+		if (falling_cnt == 0)
+			reset();
 		return;
 	}
 	if (win) {
@@ -399,15 +397,8 @@ void animate(int n) {
 		glUniformMatrix4fv(W_loc, 1, GL_TRUE, W_mat);
 		display();
 		glutTimerFunc(TIMERMSECS, animate, 0);
-		if (win_cnt == 0) {
-			win = false;
-			xangle = zangle = speedx = speedz = 0;
-			W_mat = RotateX(0) * RotateZ(0);
-			_ball->translation = Translate(
-					(-1.0 * lvl_width / 2 + 1) * cube_width, 0,
-					(-1.0 * lvl_height / 2 + 1) * cube_height);
-			glUniformMatrix4fv(W_loc, 1, GL_TRUE, W_mat);
-		}
+		if (win_cnt == 0)
+			reset();
 		return;
 	}
 	ball_fall_check();
