@@ -41,25 +41,21 @@ mat4 P_mat = mat4(1.0); // projection matrix
 const int lvl_width = 7;
 const int lvl_height = 7;
 
-GLfloat cube_width  = 1.0;
+GLfloat cube_width = 1.0;
 GLfloat cube_height = 1.0;
-GLfloat cube_depth  = 1.0;
+GLfloat cube_depth = 1.0;
 GLuint uniform_tex_sampler;
 
 vec3 eye(-0.5, 6, 4);
-vec3 coi(-0.5, 0, 0);
-vec3 up (0, 1, 0);
 
 float xangle = 0;
 float zangle = 0;
 
-char map[7][7] = { { '#', '#', '#', '#', '#', '#', '#' },
-		{ '#', '.', '.', '#', '.', '.', '#' },
-		{ '#', '.', 'O', '#', '.', '.', '#' },
-		{ '#', '.', '#',        '#', '#', '#', '#' },
-		{ '#', '.', '.', '#', '.', '.', '#' },
-		{ '#', '#', '.', '.', 'O', '.', '#' },
-		{ '#', '#', '#', '#', '#', '#', '#' } };
+char map[7][7] = { { '#', '#', '#', '#', '#', '#', '#' }, { '#', '.', '.', '#',
+		'.', '.', '#' }, { '#', '.', 'O', '#', '.', '.', '#' }, { '#', '.',
+		'#', '#', '#', '#', '#' }, { '#', '.', '.', '#', '.', '.', '#' }, {
+		'#', '#', 'T', '.', 'O', '.', '#' }, { '#', '#', '#', '#', '#', '#',
+		'#' } };
 
 cube * walls[lvl_height][lvl_width];
 hole * holes[lvl_height][lvl_width];
@@ -76,43 +72,34 @@ void build_lvl() {
 
 
 	// building base
-	vec3 upper_left = vec3(
-			-( (lvl_width+1)*cube_width / 2.0  ),
-			-cube_depth/2.0-0.001,
-			-( (lvl_height+1) * cube_height / 2.0 )
-	);
-	vec3 lower_right = vec3(
-			(lvl_width-1)* cube_width / 2.0 ,
-			-cube_depth/2.0-0.001,
-			(lvl_height-1) * cube_height / 2.0
-	);
+	vec3 upper_left = vec3(-((lvl_width + 1) * cube_width / 2.0), -cube_depth
+			/ 2.0 - 0.001, -((lvl_height + 1) * cube_height / 2.0));
+	vec3 lower_right = vec3((lvl_width - 1) * cube_width / 2.0, -cube_depth
+			/ 2.0 - 0.001, (lvl_height - 1) * cube_height / 2.0);
 	_base = new base(program, 0, upper_left, lower_right);
-
 
 	// building walls and holes
 	for (int i = 0; i < lvl_height; ++i) {
 		for (int j = 0; j < lvl_width; ++j) {
 			if (map[i][j] == '#') { //wall
 				walls[i][j] = new cube();
-				walls[i][j]->translation = Translate(
-						(-1.0 * lvl_width / 2 + j) * cube_width, 0,
-						(-1.0 * lvl_height / 2 + i) * cube_height);
-			}else if (map[i][j] == 'O') { //hole
+				walls[i][j]->translation = Translate((-1.0 * lvl_width / 2 + j)
+						* cube_width, 0, (-1.0 * lvl_height / 2 + i)
+						* cube_height);
+			} else if (map[i][j] == 'O' || map[i][j]=='T') { //hole
 				holes[i][j] = new hole();
-				holes[i][j]->translation = Translate(
-						(-1.0 * lvl_width / 2 + j) * cube_width, 0,
-						(-1.0 * lvl_height / 2 + i) * cube_height);
+				holes[i][j]->translation = Translate((-1.0 * lvl_width / 2 + j)
+						* cube_width, 0, (-1.0 * lvl_height / 2 + i)
+						* cube_height);
 			}
 		}
 	}
 
 	//building ball
 	_ball = new ball(program, 0.3, 1, 1);
-	_ball->translation = Translate(
-			(-1.0 * lvl_width / 2 + _ball->i) * cube_width, 0,
-			(-1.0 * lvl_height / 2 + _ball->j) * cube_height);
+	_ball->translation = Translate((-1.0 * lvl_width / 2 + _ball->i)
+			* cube_width, 0, (-1.0 * lvl_height / 2 + _ball->j) * cube_height);
 }
-
 
 void init_objects() {
 	cube::init(program);
@@ -127,7 +114,7 @@ void init(void) {
 	build_lvl();
 	init_objects();
 
-	V_mat = LookAt(eye, coi, up);
+	V_mat = LookAt(eye, vec3(-0.5, 0, 0), vec3(0, 1, 0));
 	P_mat = Perspective(45.0f, 1.0f * screen_width / screen_height, 1.0f,
 			100.0f);
 
@@ -183,11 +170,23 @@ void bufferBeforeDrawBall() {
 	glUniform4fv(S_loc, 1, (GLfloat*) &specular);
 }
 void bufferBeforeDrawHole() {
-	vec4 ambient = vec4(0.7, 0.0, 0.7, 0.5);
-	vec4 diffuse = vec4(0.7, 0.0, 0.7, 1.0);
+	vec4 ambient = vec4(0.0, 0.0, 0.0, 0.5);
+	vec4 diffuse = vec4(0.0, 0.0, 0.0, 1.0);
 	vec4 specular = vec4(1.0, 1.0, 1.0, 0.0);
 	GLfloat my_shine = 5000;
-	GLint my_shape_type = 0;
+	GLint my_shape_type = 3;
+	glUniform1i(shape_type_loc, my_shape_type);
+	glUniform1f(Shine_loc, my_shine);
+	glUniform4fv(A_loc, 1, (GLfloat*) &ambient);
+	glUniform4fv(D_loc, 1, (GLfloat*) &diffuse);
+	glUniform4fv(S_loc, 1, (GLfloat*) &specular);
+}
+void bufferBeforeDrawTargetHole() {
+	vec4 ambient = vec4(0.0, 0.6, 0.0, 0.5);
+	vec4 diffuse = vec4(0.0, 0.6, 0.2, 1.0);
+	vec4 specular = vec4(1.0, 1.0, 1.0, 0.0);
+	GLfloat my_shine = 5000;
+	GLint my_shape_type = 3;
 	glUniform1i(shape_type_loc, my_shape_type);
 	glUniform1f(Shine_loc, my_shine);
 	glUniform4fv(A_loc, 1, (GLfloat*) &ambient);
@@ -195,11 +194,11 @@ void bufferBeforeDrawHole() {
 	glUniform4fv(S_loc, 1, (GLfloat*) &specular);
 }
 void bufferBeforeDrawSufrace() {
-	vec4 ambient = vec4(0.7, 0.7, 0.7, 0.5);
-	vec4 diffuse = vec4(0.7, 0.7, 0.7, 1.0);
+	vec4 ambient = vec4(1.0, 1.0, 1.0, 1.0);
+	vec4 diffuse = vec4(0.0, 0.0, 0.0, 1.0);
 	vec4 specular = vec4(1.0, 1.0, 1.0, 0.0);
 	GLfloat my_shine = 500;
-	GLint my_shape_type = 3;
+	GLint my_shape_type = 2;
 	glUniform1i(shape_type_loc, my_shape_type);
 	glUniform1f(Shine_loc, my_shine);
 	glUniform4fv(A_loc, 1, (GLfloat*) &ambient);
@@ -209,7 +208,6 @@ void bufferBeforeDrawSufrace() {
 
 int dx[] = { -1, 0, 1, -1, 0, 1, -1, 0, 1 };
 int dy[] = { -1, -1, -1, 0, 0, 0, 1, 1, 1 };
-
 void display(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the window//
 
@@ -239,7 +237,6 @@ void display(void) {
 			}
 		}
 	}
-
 	bufferBeforeDrawHole();
 	for (int i = 0; i < lvl_height; i++) {
 		for (int j = 0; j < lvl_width; j++) {
@@ -247,13 +244,19 @@ void display(void) {
 				M_mat = holes[i][j]->translation * holes[i][j]->rotation;
 				glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
 				holes[i][j]->draw();
-			}else if (map[i][j] == '.'){
-				//nothing to do here :P
 			}
-
 		}
 	}
-
+	bufferBeforeDrawTargetHole();
+	for (int i = 0; i < lvl_height; i++) {
+			for (int j = 0; j < lvl_width; j++) {
+				if (map[i][j] == 'T') {
+					M_mat = holes[i][j]->translation * holes[i][j]->rotation;
+					glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
+					holes[i][j]->draw();
+				}
+			}
+		}
 	bufferBeforeDrawBall();
 
 	M_mat = _ball->translation;
@@ -280,11 +283,13 @@ void keyboard_special(int key, int x, int y) {
 		break;
 	case GLUT_KEY_DOWN:
 		eye[1] += 0.5;
-		glUniformMatrix4fv(V_loc, 1, GL_TRUE, LookAt(eye, coi, up));
+		glUniformMatrix4fv(V_loc, 1, GL_TRUE, LookAt(eye, vec3(0, 0, 0), vec3(
+				0, 1, 0)));
 		break;
 	case GLUT_KEY_UP:
 		eye[1] -= 0.5;
-		glUniformMatrix4fv(V_loc, 1, GL_TRUE, LookAt(eye, coi, up));
+		glUniformMatrix4fv(V_loc, 1, GL_TRUE, LookAt(eye, vec3(0, 0, 0), vec3(
+				0, 1, 0)));
 		break;
 	}
 }
@@ -302,7 +307,7 @@ void onReshape(int width, int height) {
 }
 
 vec3 get_arcball_vector(int x, int y) { // what is the purpose of this method?
-		//        convert the x,y screen coordinates to [-1,1] coordinates (and reverse y coordinates)
+	//        convert the x,y screen coordinates to [-1,1] coordinates (and reverse y coordinates)
 	vec3 P = vec3(1.0 * x / screen_width * 2 - 1.0, 1.0 * y / screen_height * 2
 			- 1.0, 0);
 	P.y = -P.y;
@@ -332,7 +337,6 @@ void onMotion(int x, int y) {
 		cur_mx = x;
 		cur_my = y;
 
-
 		// YES x and z are switched with y and x
 		// don't ask :D
 		if (cur_mx != last_mx || cur_my != last_my) {
@@ -357,33 +361,18 @@ float speedx = 0;
 
 #define magic 0.19
 
-//TODO resolve
-// is not called .. similar logic is already implemnted
 void ball_fall_check() {
-	const int dx[] = { 0, 0, 1, -1 };
-	const int dy[] = { 1, -1, 0, 0 };
-	const GLfloat EPS = 1e-5;
-
-
-	GLfloat temp_x, temp_z, bx, bz ,r = _ball->radius, d_sqr;
-
-	vec4 ball_center = _ball->translation * _ball->rotation * vec4(0,0,0);
-	bx = ball_center.x;
-	bz = ball_center.z;
+	int dx[] = { 0, 0, 1, -1 };
+	int dy[] = { 1, -1, 0, 0 };
 
 	int cube_x, cube_z; // cube indices of the ball
-	cube_x  = round( (bx + (1.0 * lvl_width  / 2 ) ) / cube_width );
-	cube_z  = round( (bz + (1.0 * lvl_height / 2 ) ) / cube_height );
 
+
+	GLfloat temp_x, temp_z, r = _ball->radius;
 	for (int i = 0; i < 4; ++i) {
-		temp_x = (cube_x - 1.0*lvl_width /2.0 + dx[i])*cube_width  ;
-		temp_z = (cube_z - 1.0*lvl_height/2.0 + dy[i])*cube_height ;
+		temp_x = _ball->j + r * dx[i];
+		temp_z = _ball->i + r * dy[i];
 
-		d_sqr = (temp_x-bx)*(temp_x-bx) + (temp_z-bz)*(temp_z-bz);
-		if (abs (d_sqr - r*r) < EPS){
-			cout<<"FAAAAAAAAAALLLLLING"<<endl;
-			break;
-		}
 	}
 
 }
@@ -398,10 +387,10 @@ void animate(int n) {
 	//        cout << speedx << " "<< speedz << endl;
 	if (map[(int) ceil(pos[2] - magic)][(int) floor(pos[0] + magic)] == '#'
 			|| map[(int) floor(pos[2] + magic)][(int) ceil(pos[0] - magic)]
-			                                    == '#' || map[(int) floor(pos[2] + magic)][(int) floor(
-			                                    		pos[0] + magic)] == '#'
-			                                    				|| map[(int) ceil(pos[2] - magic)][(int) ceil(pos[0] - magic)]
-			                                    				                                   == '#') {
+					== '#' || map[(int) floor(pos[2] + magic)][(int) floor(
+			pos[0] + magic)] == '#'
+			|| map[(int) ceil(pos[2] - magic)][(int) ceil(pos[0] - magic)]
+					== '#') {
 		tmp = _ball->translation;
 		speedz = 0;
 	} else {
@@ -414,10 +403,10 @@ void animate(int n) {
 	pos[2] += lvl_width / 2.0;
 	if (map[(int) ceil(pos[2] - magic)][(int) floor(pos[0] + magic)] == '#'
 			|| map[(int) floor(pos[2] + magic)][(int) ceil(pos[0] - magic)]
-			                                    == '#' || map[(int) floor(pos[2] + magic)][(int) floor(
-			                                    		pos[0] + magic)] == '#'
-			                                    				|| map[(int) ceil(pos[2] - magic)][(int) ceil(pos[0] - magic)]
-			                                    				                                   == '#') {
+					== '#' || map[(int) floor(pos[2] + magic)][(int) floor(
+			pos[0] + magic)] == '#'
+			|| map[(int) ceil(pos[2] - magic)][(int) ceil(pos[0] - magic)]
+					== '#') {
 		tmp = tt;
 		speedx = 0;
 	} else {
@@ -447,7 +436,7 @@ int main(int argc, char **argv) {
 	//glutInitContextProfile( GLUT_CORE_PROFILE );
 	//----------------------------------------
 
-	glutCreateWindow("Labyrinth :D");
+	glutCreateWindow("Labyrinth3D");
 	glewInit();
 	init();
 	glutTimerFunc(TIMERMSECS, animate, 0);
@@ -461,3 +450,4 @@ int main(int argc, char **argv) {
 	glutMainLoop();
 	return 0;
 }
+
