@@ -123,7 +123,7 @@ void build_lvl() {
 	//building ball
 }
 
-void init_lvl(int level){
+void init_lvl(int level) {
 	if (level == 1)
 		load_level("small.map");
 	else
@@ -174,9 +174,9 @@ void init(void) {
 }
 
 void bufferBeforeDrawCube() {
-	vec4 ambient = vec4(0.9, 0.9, 0.0, 1.0);
-	vec4 diffuse = vec4(0.6, 0.6, 0.0, 0.0);
-	vec4 specular = vec4(0.0, 0.0, 0.0, 0.0);
+	vec4 ambient = vec4(0.8, 0.8, 0.8, 1.0);
+	vec4 diffuse = vec4(0.2, 0.2, 0.2, 1.0);
+	vec4 specular = vec4(5.0, 5.0, 5.0, 0.0);
 	GLfloat my_shine = 1000;
 	GLint my_shape_type = 1;
 	glUniform1i(shape_type_loc, my_shape_type);
@@ -186,10 +186,10 @@ void bufferBeforeDrawCube() {
 	glUniform4fv(S_loc, 1, (GLfloat*) &specular);
 }
 void bufferBeforeDrawBall() {
-	vec4 ambient = vec4(0.7, 0.7, 0.7, 0.5);
-	vec4 diffuse = vec4(0.7, 0.7, 0.7, 1.0);
-	vec4 specular = vec4(1.0, 1.0, 1.0, 0.0);
-	GLfloat my_shine = 500;
+	vec4 ambient = vec4(0.6, 0.6, 0.6, 1.0);
+	vec4 diffuse = vec4(0.25, 0.25, 0.25, 1.0);
+	vec4 specular = vec4(0.3, 0.3, 0.3, 1.0);
+	GLfloat my_shine = 20;
 	GLint my_shape_type = 0;
 	glUniform1i(shape_type_loc, my_shape_type);
 	glUniform1f(Shine_loc, my_shine);
@@ -429,7 +429,7 @@ void ball_fall_check() {
 }
 
 void reset() {
-	if (win && level==1)
+	if (win && level == 1)
 		init_lvl(++level);
 
 	eye = vec3(-0.5, 6, 4);
@@ -445,7 +445,6 @@ void reset() {
 			(-1.0 * lvl_height / 2 + _ball->i) * cube_height);
 	glUniformMatrix4fv(W_loc, 1, GL_TRUE, W_mat);
 }
-
 
 void animate(int n) {
 	if (falling) {
