@@ -43,6 +43,9 @@ int lvl_width = 7;
 int lvl_height = 7;
 bool falling = 0;
 bool win = 0;
+
+int level = 1;
+
 GLfloat cube_width = 1.0;
 GLfloat cube_height = 1.0;
 GLfloat cube_depth = 1.0;
@@ -54,11 +57,6 @@ vec3 up(0, 1, 0);
 
 float xangle = 0;
 float zangle = 0;
-
-//char map[7][7] = { { '#', '#', '#', '#', '#', '#', '#' }, { '#', '.', '.', '#',
-//		'.', '.', '#' }, { '#', '.', 'O', '#', '.', '.', '#' }, { '#', '.', '#',
-//		'#', '#', '#', '#' }, { '#', '.', '.', '#', '.', '.', '#' }, { '#', '#',
-//		'T', '.', 'O', '.', '#' }, { '#', '#', '#', '#', '#', '#', '#' } };
 
 const int MAX_LVL_WIDTH = 50;
 const int MAX_LVL_HEIGHT = 50;
@@ -103,8 +101,8 @@ void build_lvl() {
 				walls[i][j]->translation = Translate(
 						(-1.0 * lvl_width / 2 + j) * cube_width, 0,
 						(-1.0 * lvl_height / 2 + i) * cube_height);
-				cout << i << " " << j << " " << -1.0 * lvl_width / 2 + j << " "
-						<< -1.0 * lvl_height / 2 + i << endl;
+//				cout << i << " " << j << " " << -1.0 * lvl_width / 2 + j << " "
+//						<< -1.0 * lvl_height / 2 + i << endl;
 			} else if (map[i][j] == 'O' || map[i][j] == 'T') { //hole
 				holes[i][j] = new hole();
 				holes[i][j]->translation = Translate(
@@ -125,7 +123,13 @@ void build_lvl() {
 	//building ball
 }
 
-void init_objects() {
+void init_lvl(int level){
+	if (level == 1)
+		load_level("small.map");
+	else
+		load_level("big.map");
+
+	build_lvl();
 	cube::init(program);
 	hole::init(program);
 }
@@ -135,8 +139,8 @@ void init(void) {
 	// Load shaders and use the resulting shader program
 	program = InitShader("vshader.glsl", "fshader.glsl");
 	glUseProgram(program);
-	build_lvl();
-	init_objects();
+
+	init_lvl(level);
 
 	V_mat = LookAt(eye, coi, up);
 	P_mat = Perspective(45.0f, 1.0f * screen_width / screen_height, 1.0f,
@@ -296,6 +300,26 @@ void keyboard(unsigned char key, int x, int y) {
 		cout << "exit" << endl;
 		exit(EXIT_SUCCESS);
 		break;
+	case 'a':
+		eye.x -= 0.5;
+		coi.x -= 0.5;
+		glUniformMatrix4fv(V_loc, 1, GL_TRUE, LookAt(eye, coi, up));
+		break;
+	case 'd':
+		eye.x += 0.5;
+		coi.x += 0.5;
+		glUniformMatrix4fv(V_loc, 1, GL_TRUE, LookAt(eye, coi, up));
+		break;
+	case 's':
+		eye.z += 0.5;
+		coi.z += 0.5;
+		glUniformMatrix4fv(V_loc, 1, GL_TRUE, LookAt(eye, coi, up));
+		break;
+	case 'w':
+		eye.z -= 0.5;
+		coi.z -= 0.5;
+		glUniformMatrix4fv(V_loc, 1, GL_TRUE, LookAt(eye, coi, up));
+		break;
 	}
 }
 
@@ -306,11 +330,11 @@ void keyboard_special(int key, int x, int y) {
 	case GLUT_KEY_LEFT:
 		break;
 	case GLUT_KEY_DOWN:
-		eye[1] += 0.5;
+		eye.y += 0.5;
 		glUniformMatrix4fv(V_loc, 1, GL_TRUE, LookAt(eye, coi, up));
 		break;
 	case GLUT_KEY_UP:
-		eye[1] -= 0.5;
+		eye.y -= 0.5;
 		glUniformMatrix4fv(V_loc, 1, GL_TRUE, LookAt(eye, coi, up));
 		break;
 	}
@@ -389,7 +413,7 @@ void ball_fall_check() {
 	vec4 pos = _ball->translation * vec3(0, 0, 0);
 	int i = (int) (pos[2] + lvl_height / 2.0 + 0.5);
 	int j = (int) (pos[0] + lvl_width / 2.0 + 0.5);
-	cout << pos[2] << " " << pos[0] << endl;
+//	cout << pos[2] << " " << pos[0] << endl;
 	if (map[i][j] == 'O' || map[i][j] == 'T') {
 		if (dist(pos[0], pos[2], j - lvl_width / 2.0, i - lvl_height / 2.0)
 				< _ball->radius) {
@@ -403,7 +427,16 @@ void ball_fall_check() {
 		}
 	}
 }
+
 void reset() {
+	if (win && level==1)
+		init_lvl(++level);
+
+	eye = vec3(-0.5, 6, 4);
+	coi = vec3(-0.5, 0, 0);
+	up = vec3(0, 1, 0);
+	glUniformMatrix4fv(V_loc, 1, GL_TRUE, LookAt(eye, coi, up));
+
 	falling = win = false;
 	xangle = zangle = speedx = speedz = 0;
 	W_mat = RotateX(0) * RotateZ(0);
@@ -412,6 +445,7 @@ void reset() {
 			(-1.0 * lvl_height / 2 + _ball->i) * cube_height);
 	glUniformMatrix4fv(W_loc, 1, GL_TRUE, W_mat);
 }
+
 
 void animate(int n) {
 	if (falling) {
@@ -482,8 +516,7 @@ void animate(int n) {
 
 int main(int argc, char **argv) {
 
-//	load_level("small.map");
-	load_level("big.map");
+
 
 	glutInit(&argc, argv);
 	glEnable(GL_DEPTH_TEST);
