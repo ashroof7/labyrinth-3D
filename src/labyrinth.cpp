@@ -367,7 +367,7 @@ void ball_fall_check() {
 
 	GLfloat temp_x, temp_z, bx, bz ,r = _ball->radius, d_sqr;
 
-	vec3 ball_center = _ball->translation * _ball->rotation * vec3(0,0,0);
+	vec4 ball_center = _ball->translation * _ball->rotation * vec4(0,0,0);
 	bx = ball_center.x;
 	bz = ball_center.z;
 
