@@ -67,22 +67,6 @@ base * _base;
 //openGL functions
 //==================
 
-//TODO remove
-inline void create_buffer(GLuint* vbo, size_t pts_size, const GLvoid * pts,
-		size_t color_size, const GLvoid * color) {
-	// example code to be replaced with project customized code
-	glGenBuffers(2, vbo); // generate buffers position, color
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-	glBufferData(GL_ARRAY_BUFFER, pts_size, pts, GL_STATIC_DRAW);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0) );
-
-	//color
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-	glBufferData(GL_ARRAY_BUFFER, color_size, color, GL_STATIC_DRAW);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0) );
-}
 
 void build_lvl() {
 	vec3 upper_left = vec3(-(lvl_width * cube_width / 2.0 + cube_width), 0,
@@ -94,12 +78,10 @@ void build_lvl() {
 	for (int i = 0; i < lvl_height; ++i) {
 		for (int j = 0; j < lvl_width; ++j) {
 			if (map[i][j] == '#') { //wall
-				walls[i][j] = new cube(0);
+				walls[i][j] = new cube();
 				walls[i][j]->translation = Translate(
 						(-1.0 * lvl_width / 2 + j) * cube_width, 0,
 						(-1.0 * lvl_height / 2 + i) * cube_height);
-			} else if (map[i][j] == '.') { // empty
-				//nothing to do here :P
 			}
 		}
 	}
@@ -110,8 +92,6 @@ void build_lvl() {
 				holes[i][j]->translation = Translate(
 						(-1.0 * lvl_width / 2 + j) * cube_width, 0,
 						(-1.0 * lvl_height / 2 + i) * cube_height);
-			} else if (map[i][j] == '.') { // empty
-				//nothing to do here :P
 			}
 		}
 	}
@@ -121,18 +101,10 @@ void build_lvl() {
 			(-1.0 * lvl_height / 2 + _ball->j) * cube_height);
 }
 
-void init_buffers() {
-	// Initializing  VAOs and VBOs
-	glGenVertexArrays(1, &cube_vao);
-	glBindVertexArray(cube_vao);
-	cube::init(program);
-	glBindVertexArray(0);
 
-	glGenVertexArrays(1, &hole_vao);
-	glBindVertexArray(hole_vao);
+void init_objects() {
+	cube::init(program);
 	hole::init(program);
-	glBindVertexArray(0);
-	//        test_cube = new cube(, 0);
 }
 
 void init(void) {
@@ -141,7 +113,7 @@ void init(void) {
 	program = InitShader("vshader.glsl", "fshader.glsl");
 	glUseProgram(program);
 	build_lvl();
-	init_buffers();
+	init_objects();
 
 	V_mat = LookAt(eye, vec3(0, 0, 0), vec3(0, 1, 0));
 	P_mat = Perspective(45.0f, 1.0f * screen_width / screen_height, 1.0f,
@@ -207,12 +179,8 @@ void bufferBeforeDrawSufrace() {
 void display(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the window//
 
-	glEnableVertexAttribArray(cube_vao);
-	glBindVertexArray(cube_vao);
+//	_base->draw();
 
-	// update rotation and translation matrices of each object before uploading to shader
-	//        glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
-	//        test_cube->draw();
 	bufferBeforeDrawCube();
 
 	for (int i = 0; i < lvl_height; ++i) {
@@ -221,41 +189,23 @@ void display(void) {
 				M_mat = walls[i][j]->translation * walls[i][j]->rotation;
 				glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
 				walls[i][j]->draw();
-			} else if (map[i][j] == '.') { // empty
-				//nothing to do here :P
-			}
-		}
-	}
-	glBindVertexArray(0);
-	glDisableVertexAttribArray(cube_vao);
-
-	glEnableVertexAttribArray(hole_vao);
-	glBindVertexArray(hole_vao);
-	for (int i = 0; i < lvl_height; ++i) {
-		for (int j = 0; j < lvl_width; ++j) {
-			if (map[i][j] == 'O') { //hole
+			}else if (map[i][j] == 'O') { //hole
 				M_mat = holes[i][j]->translation * holes[i][j]->rotation;
 				glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
 				holes[i][j]->draw();
-			} else if (map[i][j] == '.') { // empty
+			}else if (map[i][j] == '.'){
 				//nothing to do here :P
 			}
+
 		}
 	}
+
 	bufferBeforeDrawBall();
+
 	M_mat = _ball->translation;
 	glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
 	_ball->draw();
-	glBindVertexArray(0);
-	glDisableVertexAttribArray(hole_vao);
-	glutSwapBuffers(); // Double buffering
 
-//	_base->draw();
-
-//	M_mat = _ball->translation;
-//	glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
-//	_ball->draw();
-//	glDisableVertexAttribArray(vao);
 	glutSwapBuffers(); // Double buffering
 }
 

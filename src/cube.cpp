@@ -95,44 +95,27 @@ GLfloat cube::tex_coords[] = {
 
 };
 
-GLushort cube::base_elements[] = {
-// front
-                0, 1, 2, 2, 3, 0,
-                // top
-                3, 2, 6, 6, 7, 3,
-                // back
-                7, 6, 5, 5, 4, 7,
-                // bottom
-                4, 5, 1, 1, 0, 4,
-                // left
-                4, 0, 3, 3, 7, 4,
-                // right
-                1, 5, 6, 6, 2, 1, };
+GLuint  cube::vao = 0,
+		cube::pos_vbo=0,
+		cube::col_vbo=0,
+		cube::tex_coord=0,
+		cube::texture_id=0;
 
-GLuint cube::program = 0, cube::base_elements_ibo = 0,cube::pos_vbo=0,cube::col_vbo=0,cube::tex_coord=0,cube::texture_id=0;
+void cube::init(GLuint program) {
+		glGenVertexArrays(1, &vao);
+		glBindVertexArray(vao);
 
-void cube::init(GLuint prog) {
-        program = prog;
-        // base cube elements
-        glGenBuffers(1, &base_elements_ibo);
-
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, base_elements_ibo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(base_elements), base_elements,
-                        GL_STATIC_DRAW);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); // why this line?!?!
-
-        // side vertices
+        //  vertices
         glGenBuffers(1, &pos_vbo);
         glBindBuffer(GL_ARRAY_BUFFER, pos_vbo);
         glBufferData(GL_ARRAY_BUFFER, sizeof(side_vertices), side_vertices,
                         GL_STATIC_DRAW);
 
-        // based on the shader variable name
         GLint pos_attrib = glGetAttribLocation(program, "vPosition");
         glEnableVertexAttribArray(pos_attrib);
         glVertexAttribPointer(pos_attrib, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-        // side colors
+        //  colors
         glGenBuffers(1, &col_vbo);
         glBindBuffer(GL_ARRAY_BUFFER, col_vbo);
         glBufferData(GL_ARRAY_BUFFER, sizeof(side_colors), side_colors,
@@ -158,31 +141,31 @@ void cube::init(GLuint prog) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wood_image.width, wood_image.height,
                         0, GL_RGB, GL_UNSIGNED_BYTE, wood_image.pixel_data);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+        glBindVertexArray(vao);
 }
-cube::cube(int offset_index) {
+
+cube::cube() {
         translation = mat4(1.0);
         rotation = mat4(1.0);
 }
 
-cube::cube() {
-        col_vbo = pos_vbo = base_elements_ibo = texture_id = tex_coord = -1;
-}
 
 cube::~cube() {
         glDeleteBuffers(1, &pos_vbo);
         glDeleteBuffers(1, &col_vbo);
-        glDeleteBuffers(1, &base_elements_ibo);
         glDeleteTextures(1, &texture_id);
 }
 
 void cube::draw() {
-        //         draw base using buffer element
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, base_elements_ibo);
-        GLint size;
-        glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-        glActiveTexture(GL_TEXTURE0);
+		glEnableVertexAttribArray(vao);
+		glBindVertexArray(vao);
+
+		// draw base using buffer element
         glBindTexture(GL_TEXTURE_2D, texture_id);
-//                glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
         glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        glBindVertexArray(0);
+        glDisableVertexAttribArray(vao);
 
 }

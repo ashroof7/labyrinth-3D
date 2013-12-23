@@ -10,6 +10,8 @@ class ball {
 private:
 	float radius;
 	static GLfloat ball_color[];
+	static GLuint vao;
+
 public:
 	mat4 translation, rotation;
 	int i, j;
