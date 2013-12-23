@@ -19,16 +19,18 @@ using namespace Angel;
 class cube {
 
 private:
+	static GLuint program;
 	static GLfloat side_vertices[];
 	static GLfloat side_colors[];
 	static GLfloat tex_coords[];
 	static GLushort base_elements[];
 
 public:
+	static void init(GLuint prog); // called once before drawing all the cubes
 	mat4 translation, rotation;
-	GLuint pos_vbo, col_vbo, base_elements_ibo, tex_coord, texture_id;
+	static GLuint pos_vbo, col_vbo, base_elements_ibo, tex_coord, texture_id;
 	cube();
-	cube(GLuint program, int offset_index);
+	cube(int offset_index);
 	virtual ~cube();
 	void draw();
 };

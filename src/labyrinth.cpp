@@ -1,6 +1,7 @@
 #include "include/Angel.h"
 #include "cube.h"
 #include "ball.h"
+#include "hole.h"
 #include <iostream>
 #include <time.h>
 #include <sys/time.h>
@@ -10,7 +11,7 @@
 using namespace std;
 using namespace Angel;
 
-int TIMERMSECS = 100;
+int TIMERMSECS = 10;
 
 //mouse state variables
 int last_mx = 0, last_my = 0, cur_mx = 0, cur_my = 0;
@@ -20,7 +21,8 @@ GLfloat screen_width = 600;
 GLfloat screen_height = 600;
 
 GLuint program;
-GLuint vao;
+GLuint cube_vao;
+GLuint hole_vao;
 
 GLuint P_loc, M_loc, V_loc, W_loc; // locations pointers of P, M, V, W matrices in shader
 GLuint A_loc, D_loc, S_loc, Shine_loc;
@@ -46,14 +48,14 @@ GLuint uniform_tex_sampler;
 float xangle = 0;
 float zangle = 0;
 char map[7][7] = { { '#', '#', '#', '#', '#', '#', '#' }, { '#', '.', '.', '#',
-		'.', '.', '#' }, { '#', '.', '.', '#', '.', '.', '#' }, { '#', '.',
-		'#', '#', '#', '#', '#' }, { '#', '.', '.', '#', '.', '.', '#' }, {
-		'#', '#', '.', '.', '.', '.', '#' }, { '#', '#', '#', '#', '#', '#',
-		'#' } };
+		'.', '.', '#' }, { '#', '.', 'O', '#', '.', '.', '#' }, { '#', '.', '#',
+		'#', '#', '#', '#' }, { '#', '.', '.', '#', '.', '.', '#' }, { '#', '#',
+		'.', '.', 'O', '.', '#' }, { '#', '#', '#', '#', '#', '#', '#' } };
 
 //char map[1][1] = {{'#'}};
 
 cube * walls[lvl_height][lvl_width];
+hole * holes[lvl_height][lvl_width];
 ball * _ball;
 //==================
 //openGL functions
@@ -66,38 +68,58 @@ inline void create_buffer(GLuint* vbo, size_t pts_size, const GLvoid * pts,
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 	glBufferData(GL_ARRAY_BUFFER, pts_size, pts, GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0) );
 
 	//color
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
 	glBufferData(GL_ARRAY_BUFFER, color_size, color, GL_STATIC_DRAW);
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
+	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0) );
 }
 
 void build_lvl() {
 	for (int i = 0; i < lvl_height; ++i) {
 		for (int j = 0; j < lvl_width; ++j) {
 			if (map[i][j] == '#') { //wall
-				walls[i][j] = new cube(program, 0);
-				walls[i][j]->translation = Translate((-1.0 * lvl_width / 2 + j)
-						* cube_width, 0, (-1.0 * lvl_height / 2 + i)
-						* cube_height);
+				walls[i][j] = new cube(0);
+				walls[i][j]->translation = Translate(
+						(-1.0 * lvl_width / 2 + j) * cube_width, 0,
+						(-1.0 * lvl_height / 2 + i) * cube_height);
+			} else if (map[i][j] == '.') { // empty
+				//nothing to do here :P
+			}
+		}
+	}
+	for (int i = 0; i < lvl_height; ++i) {
+		for (int j = 0; j < lvl_width; ++j) {
+			if (map[i][j] == 'O') { //hole
+				holes[i][j] = new hole();
+				holes[i][j]->translation = Translate(
+						(-1.0 * lvl_width / 2 + j) * cube_width, 0,
+						(-1.0 * lvl_height / 2 + i) * cube_height);
 			} else if (map[i][j] == '.') { // empty
 				//nothing to do here :P
 			}
 		}
 	}
 	_ball = new ball(program, 0.3, 1, 1);
-	_ball->translation = Translate((-1.0 * lvl_width / 2 + _ball->i)
-			* cube_width, 0, (-1.0 * lvl_height / 2 + _ball->j) * cube_height);
+	_ball->translation = Translate(
+			(-1.0 * lvl_width / 2 + _ball->i) * cube_width, 0,
+			(-1.0 * lvl_height / 2 + _ball->j) * cube_height);
 }
 
 void init_buffers() {
 	// Initializing  VAOs and VBOs
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-	test_cube = new cube(program, 0);
+	glGenVertexArrays(1, &cube_vao);
+	glBindVertexArray(cube_vao);
+	cube::init(program);
+	glBindVertexArray(0);
+
+	glGenVertexArrays(1, &hole_vao);
+	glBindVertexArray(hole_vao);
+	hole::init(program);
+	glBindVertexArray(0);
+	//	test_cube = new cube(, 0);
 }
 
 void init(void) {
@@ -145,9 +167,9 @@ void bufferBeforeDrawCube() {
 	GLint my_shape_type = 1;
 	glUniform1i(shape_type_loc, my_shape_type);
 	glUniform1f(Shine_loc, my_shine);
-	glUniform4fv(A_loc, 1, (GLfloat*)&ambient);
-	glUniform4fv(D_loc, 1, (GLfloat*)&diffuse);
-	glUniform4fv(S_loc, 1, (GLfloat*)&specular);
+	glUniform4fv(A_loc, 1, (GLfloat*) &ambient);
+	glUniform4fv(D_loc, 1, (GLfloat*) &diffuse);
+	glUniform4fv(S_loc, 1, (GLfloat*) &specular);
 }
 void bufferBeforeDrawBall() {
 	vec4 ambient = vec4(0.7, 0.7, 0.7, 0.5);
@@ -157,9 +179,9 @@ void bufferBeforeDrawBall() {
 	GLint my_shape_type = 0;
 	glUniform1i(shape_type_loc, my_shape_type);
 	glUniform1f(Shine_loc, my_shine);
-	glUniform4fv(A_loc, 1, (GLfloat*)&ambient);
-	glUniform4fv(D_loc, 1, (GLfloat*)&diffuse);
-	glUniform4fv(S_loc, 1, (GLfloat*)&specular);
+	glUniform4fv(A_loc, 1, (GLfloat*) &ambient);
+	glUniform4fv(D_loc, 1, (GLfloat*) &diffuse);
+	glUniform4fv(S_loc, 1, (GLfloat*) &specular);
 }
 void bufferBeforeDrawHole() {
 
@@ -170,13 +192,14 @@ void bufferBeforeDrawSufrace() {
 void display(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the window//
 
-	glEnableVertexAttribArray(vao);
-	glBindVertexArray(vao);
+	glEnableVertexAttribArray(cube_vao);
+	glBindVertexArray(cube_vao);
 
 	// update rotation and translation matrices of each object before uploading to shader
 	//	glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
 	//	test_cube->draw();
 	bufferBeforeDrawCube();
+
 	for (int i = 0; i < lvl_height; ++i) {
 		for (int j = 0; j < lvl_width; ++j) {
 			if (map[i][j] == '#') { //wall
@@ -188,12 +211,30 @@ void display(void) {
 			}
 		}
 	}
+	glBindVertexArray(0);
+	glDisableVertexAttribArray(cube_vao);
+
+	glEnableVertexAttribArray(hole_vao);
+	glBindVertexArray(hole_vao);
+	for (int i = 0; i < lvl_height; ++i) {
+		for (int j = 0; j < lvl_width; ++j) {
+			if (map[i][j] == 'O') { //hole
+				M_mat = holes[i][j]->translation * holes[i][j]->rotation;
+				glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
+				holes[i][j]->draw();
+			} else if (map[i][j] == '.') { // empty
+				//nothing to do here :P
+			}
+		}
+	}
 	bufferBeforeDrawBall();
 	M_mat = _ball->translation;
 	glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
 	_ball->draw();
-	glDisableVertexAttribArray(vao);
+	glBindVertexArray(0);
+	glDisableVertexAttribArray(hole_vao);
 	glutSwapBuffers(); // Double buffering
+
 }
 
 void keyboard(unsigned char key, int x, int y) {
@@ -232,8 +273,8 @@ void onReshape(int width, int height) {
 
 vec3 get_arcball_vector(int x, int y) { // what is the purpose of this method?
 //	convert the x,y screen coordinates to [-1,1] coordinates (and reverse y coordinates)
-	vec3 P = vec3(1.0 * x / screen_width * 2 - 1.0, 1.0 * y / screen_height * 2
-			- 1.0, 0);
+	vec3 P = vec3(1.0 * x / screen_width * 2 - 1.0,
+			1.0 * y / screen_height * 2 - 1.0, 0);
 	P.y = -P.y;
 
 	float OP_squared = P.x * P.x + P.y * P.y;
@@ -297,7 +338,7 @@ void animate(int n) {
 		tmp = _ball->translation;
 		speedz = 0;
 	} else {
-		speedz += -zangle / 500.0;
+		speedz += -zangle / 5000.0;
 	}
 	mat4 tt = tmp;
 	tmp *= Translate(0, 0, speedx);
@@ -311,7 +352,7 @@ void animate(int n) {
 		tmp = tt;
 		speedx = 0;
 	} else {
-		speedx += xangle / 500.0;
+		speedx += xangle / 5000.0;
 	}
 	_ball->translation = tmp;
 	display();
@@ -336,7 +377,7 @@ int main(int argc, char **argv) {
 	//glutInitContextProfile( GLUT_CORE_PROFILE );
 	//----------------------------------------
 
-	glutCreateWindow("Labyrinth :D");
+	glutCreateWindow("Labyrinth");
 	glewInit();
 	init();
 	glutTimerFunc(TIMERMSECS, animate, 0);
