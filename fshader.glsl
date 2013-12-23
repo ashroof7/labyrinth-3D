@@ -14,6 +14,8 @@ uniform int shapeType;
 uniform sampler2D tex_sampler;
 
 void main(void){
+	float d = length(fL);
+	float decay = 1;//1.0/(1 + 0.0025555 * d + 0.0000005555*d*d);
 	vec3 N = normalize(fN);
 	vec3 E = normalize(fE);
 	vec3 L = normalize(fL);
@@ -25,11 +27,13 @@ void main(void){
     vec4 specular = Ks*SpecularProduct;
     if( dot(L, N) < 0.0 )
         specular = vec4(0.0, 0.0, 0.0, 1.0);
-    vec4 fColor = ambient + diffuse + specular;
-   	fColor.a = 1.0;
-   	if(shapeType == 1)
-	out_Color =(texture(tex_sampler, ex_texcoord)) * fColor;
+    vec4 fColor = ambient + diffuse * decay + specular * decay;
+   	fColor.a = 0.0;
+   	if(shapeType==1)
+		out_Color = (texture(tex_sampler, ex_texcoord)) * fColor;
 	else if(shapeType == 0)
-	out_Color = fColor;
+		out_Color = fColor;
+	else if(shapeType == 2)
+		out_Color = (texture(tex_sampler, ex_texcoord));
 }
 
