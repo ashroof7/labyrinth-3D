@@ -328,7 +328,7 @@ void onMotion(int x, int y) {
 float speedz = 0;
 float speedx = 0;
 
-#define margin 0.19
+#define magic 0.19
 
 void animate(int n) {
 	mat4 tmp = _ball->translation;
@@ -338,12 +338,12 @@ void animate(int n) {
 	pos[0] += lvl_width / 2.0;
 	pos[2] += lvl_height / 2.0;
 	//	cout << speedx << " "<< speedz << endl;
-	if (map[(int) ceil(pos[2] - margin)][(int) floor(pos[0] + margin)] == '#'
-			|| map[(int) floor(pos[2] + margin)][(int) ceil(pos[0] - margin)]
+	if (map[(int) ceil(pos[2] - magic)][(int) floor(pos[0] + magic)] == '#'
+			|| map[(int) floor(pos[2] + magic)][(int) ceil(pos[0] - magic)]
 					== '#'
-			|| map[(int) floor(pos[2] + margin)][(int) floor(pos[0] + margin)]
+			|| map[(int) floor(pos[2] + magic)][(int) floor(pos[0] + magic)]
 					== '#'
-			|| map[(int) ceil(pos[2] - margin)][(int) ceil(pos[0] - margin)]
+			|| map[(int) ceil(pos[2] - magic)][(int) ceil(pos[0] - magic)]
 					== '#') {
 		tmp = _ball->translation;
 		speedz = 0;
@@ -356,12 +356,12 @@ void animate(int n) {
 	pos = tmp * vec3(0, 0, 0);
 	pos[0] += lvl_height / 2.0;
 	pos[2] += lvl_width / 2.0;
-	if (map[(int) ceil(pos[2] - margin)][(int) floor(pos[0] + margin)] == '#'
-			|| map[(int) floor(pos[2] + margin)][(int) ceil(pos[0] - margin)]
+	if (map[(int) ceil(pos[2] - magic)][(int) floor(pos[0] + magic)] == '#'
+			|| map[(int) floor(pos[2] + magic)][(int) ceil(pos[0] - magic)]
 					== '#'
-			|| map[(int) floor(pos[2] + margin)][(int) floor(pos[0] + margin)]
+			|| map[(int) floor(pos[2] + magic)][(int) floor(pos[0] + magic)]
 					== '#'
-			|| map[(int) ceil(pos[2] - margin)][(int) ceil(pos[0] - margin)]
+			|| map[(int) ceil(pos[2] - magic)][(int) ceil(pos[0] - magic)]
 					== '#') {
 		tmp = tt;
 		speedx = 0;
