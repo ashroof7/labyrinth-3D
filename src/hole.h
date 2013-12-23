@@ -9,10 +9,11 @@ using namespace Angel;
 class hole {
 
 private:
-	static GLuint pts, vao;
+	static GLuint pts, vao, col_vbo;
 	static const int num_segments = 50;
 	static const float radius = 0.4;
 	static vec3 points[];
+	static vec4 colors[];
 	static void fill();
 
 public:

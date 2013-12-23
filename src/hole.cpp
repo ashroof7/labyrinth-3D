@@ -4,8 +4,11 @@
 using namespace std;
 
 vec3 hole::points[num_segments];
+vec4 hole::colors[num_segments];
+
 GLuint 	hole::vao = 0,
-		hole::pts = 0;
+		hole::pts = 0,
+		hole::col_vbo = 0;
 
 void hole::init(GLuint program) {
 
@@ -22,6 +25,16 @@ void hole::init(GLuint program) {
 	glEnableVertexAttribArray(pos_attrib);
 	glVertexAttribPointer(pos_attrib, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
+
+	// colors
+	glGenBuffers(1, &col_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, col_vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
+
+	GLint col_attrib = glGetAttribLocation(program, "gl_Color");
+	glEnableVertexAttribArray(col_attrib);
+	glVertexAttribPointer(col_attrib, 4, GL_FLOAT, GL_FALSE, 0, 0);
+
 	glBindVertexArray(0);
 }
 
@@ -36,6 +49,7 @@ void hole::fill() {
 	float y = 0;
 	int index = 0;
 	for (int ii = 0; ii < num_segments; ii++) {
+		colors[index]   = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 		points[index++] = vec3(x, -0.5, y);
 		//calculate the tangential vector
 		//remember, the radial vector is (x, y)

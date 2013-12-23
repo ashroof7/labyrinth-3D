@@ -316,9 +316,27 @@ float speedx = 0;
 
 #define magic 0.19
 
+void ball_fall_check(){
+	int dx[] = {0,0,1,-1};
+	int dy[] = {1,-1,0,0};
+
+	int cube_x, cube_z; // cube indices of the ball
+
+
+	GLfloat temp_x, temp_z, r = _ball->radius;
+	for (int i = 0; i < 4; ++i) {
+		temp_x = _ball->j+r*dx[i];
+		temp_z = _ball->i+r*dy[i];
+
+
+	}
+
+}
+
+
 void animate(int n) {
         mat4 tmp = _ball->translation;
-        vec4 pos = tmp * vec3(0, 0, 0);
+        vec4 pos = tmp * vec3(0, 0, 0); //FIXME why do u need multiplication ??
         tmp *= Translate(speedz, 0, 0);
         pos = tmp * vec3(0, 0, 0);
         pos[0] += lvl_width / 2.0;
