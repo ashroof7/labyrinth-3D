@@ -50,7 +50,7 @@ GLuint uniform_tex_sampler;
 
 vec3 eye(-0.5, 6, 4);
 vec3 coi(-0.5, 0, 0);
-vec3 up (0, 1, 0);
+vec3 up(0, 1, 0);
 
 float xangle = 0;
 float zangle = 0;
@@ -72,18 +72,17 @@ base * _base;
 //openGL functions
 //==================
 
-void load_level(string filename){
+void load_level(string filename) {
 	ifstream file;
 	file.open(filename.c_str());
-	file>>lvl_width>>lvl_height;
+	file >> lvl_width >> lvl_height;
 
 	for (int i = 0; i < lvl_height; ++i) {
-		file>>map[i];
-		cout<<map[i]<<endl;
+		file >> map[i];
+		cout << map[i] << endl;
 	}
 	file.close();
 }
-
 
 void build_lvl() {
 	// notice that everything is shifted by cube_side/2 to ease calculations
@@ -104,18 +103,20 @@ void build_lvl() {
 				walls[i][j]->translation = Translate(
 						(-1.0 * lvl_width / 2 + j) * cube_width, 0,
 						(-1.0 * lvl_height / 2 + i) * cube_height);
+				cout << i << " " << j << " " << -1.0 * lvl_width / 2 + j << " "
+						<< -1.0 * lvl_height / 2 + i << endl;
 			} else if (map[i][j] == 'O' || map[i][j] == 'T') { //hole
 				holes[i][j] = new hole();
 				holes[i][j]->translation = Translate(
 						(-1.0 * lvl_width / 2 + j) * cube_width, 0,
 						(-1.0 * lvl_height / 2 + i) * cube_height);
-			}else if (map[i][j] == 'S'){
+			} else if (map[i][j] == 'S') {
 				_ball = new ball(program, 0.3, 1, 1);
 				_ball->i = i;
 				_ball->j = j;
 				_ball->translation = Translate(
-						(-1.0 * lvl_width / 2 + j ) * cube_width, 0,
-						(-1.0 * lvl_height / 2 + i ) * cube_height);
+						(-1.0 * lvl_width / 2 + j) * cube_width, 0,
+						(-1.0 * lvl_height / 2 + i) * cube_height);
 
 			}
 		}
@@ -137,8 +138,8 @@ void init(void) {
 	build_lvl();
 	init_objects();
 
-	 V_mat = LookAt(eye, coi, up);
-	 P_mat = Perspective(45.0f, 1.0f * screen_width / screen_height, 1.0f,
+	V_mat = LookAt(eye, coi, up);
+	P_mat = Perspective(45.0f, 1.0f * screen_width / screen_height, 1.0f,
 			100.0f);
 
 	// matrices location in shader
@@ -379,24 +380,35 @@ float speedx = 0;
 int falling_cnt;
 int win_cnt;
 #define magic 0.19
-
+float dist(float x1, float y1, float x2, float y2) {
+	float a = (x1 - x2) * (x1 - x2);
+	float b = (y1 - y2) * (y1 - y2);
+	return sqrt(a + b);
+}
 void ball_fall_check() {
 	vec4 pos = _ball->translation * vec3(0, 0, 0);
-	pos[0] += lvl_width / 2.0;
-	pos[2] += lvl_height / 2.0;
-	if (map[(int) pos[2]][(int) pos[0]] == 'O') {
-		falling = true;
-		falling_cnt = 1000 / TIMERMSECS;
-	} else if (map[(int) pos[2]][(int) pos[0]] == 'T') {
-		win = true;
-		win_cnt = 4 * 1000 / TIMERMSECS;
+	int i = (int) (pos[2] + lvl_height / 2.0 + 0.5);
+	int j = (int) (pos[0] + lvl_width / 2.0 + 0.5);
+	cout << pos[2] << " " << pos[0] << endl;
+	if (map[i][j] == 'O' || map[i][j] == 'T') {
+		if (dist(pos[0], pos[2], j - lvl_width / 2.0, i - lvl_height / 2.0)
+				< _ball->radius) {
+			if (map[i][j] == 'O') {
+				falling = true;
+				falling_cnt = 1000 / TIMERMSECS;
+			} else if (map[i][j] == 'T') {
+				win = true;
+				win_cnt = 4 * 1000 / TIMERMSECS;
+			}
+		}
 	}
 }
 void reset() {
 	falling = win = false;
 	xangle = zangle = speedx = speedz = 0;
 	W_mat = RotateX(0) * RotateZ(0);
-	_ball->translation = Translate((-1.0 * lvl_width / 2 + _ball->j) * cube_width, 0,
+	_ball->translation = Translate(
+			(-1.0 * lvl_width / 2 + _ball->j) * cube_width, 0,
 			(-1.0 * lvl_height / 2 + _ball->i) * cube_height);
 	glUniformMatrix4fv(W_loc, 1, GL_TRUE, W_mat);
 }
@@ -427,8 +439,8 @@ void animate(int n) {
 	vec4 pos = tmp * vec3(0, 0, 0); //FIXME why do u need multiplication ?? 3shan yetla3lak vec4 badal maheya mat4
 	tmp *= Translate(speedz, 0, 0);
 	pos = tmp * vec3(0, 0, 0);
-	pos[2] += lvl_width / 2.0;
-	pos[0] += lvl_height / 2.0;
+	pos[0] += lvl_width / 2.0;
+	pos[2] += lvl_height / 2.0;
 	//        cout << speedx << " "<< speedz << endl;
 	if (map[(int) ceil(pos[2] - magic)][(int) floor(pos[0] + magic)] == '#'
 			|| map[(int) floor(pos[2] + magic)][(int) ceil(pos[0] - magic)]
