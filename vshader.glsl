@@ -51,6 +51,9 @@ void main(){
 					not_here++;
 				}
 			}
+	}else if(shapeType >= 2)
+	{
+		normal = vec3(0, 1.0, 0);
 	}
 	normalize(normal);
 	vec3 pos = (MWV * vec4(vPosition, 1.0)).xyz;

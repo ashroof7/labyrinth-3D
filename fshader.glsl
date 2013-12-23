@@ -34,6 +34,8 @@ void main(void){
 	else if(shapeType == 0)
 		out_Color = fColor;
 	else if(shapeType == 2)
-		out_Color = (texture(tex_sampler, ex_texcoord));
+		out_Color = (texture(tex_sampler, ex_texcoord)) * fColor;
+	else if(shapeType == 3)
+		out_Color = fColor;
 }
 

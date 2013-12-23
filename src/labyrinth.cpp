@@ -170,14 +170,23 @@ void bufferBeforeDrawBall() {
 	glUniform4fv(S_loc, 1, (GLfloat*) &specular);
 }
 void bufferBeforeDrawHole() {
-
+	vec4 ambient = vec4(0.7, 0.0, 0.7, 0.5);
+	vec4 diffuse = vec4(0.7, 0.0, 0.7, 1.0);
+	vec4 specular = vec4(1.0, 1.0, 1.0, 0.0);
+	GLfloat my_shine = 5000;
+	GLint my_shape_type = 0;
+	glUniform1i(shape_type_loc, my_shape_type);
+	glUniform1f(Shine_loc, my_shine);
+	glUniform4fv(A_loc, 1, (GLfloat*) &ambient);
+	glUniform4fv(D_loc, 1, (GLfloat*) &diffuse);
+	glUniform4fv(S_loc, 1, (GLfloat*) &specular);
 }
 void bufferBeforeDrawSufrace() {
 	vec4 ambient = vec4(0.7, 0.7, 0.7, 0.5);
 	vec4 diffuse = vec4(0.7, 0.7, 0.7, 1.0);
 	vec4 specular = vec4(1.0, 1.0, 1.0, 0.0);
 	GLfloat my_shine = 500;
-	GLint my_shape_type = 2;
+	GLint my_shape_type = 3;
 	glUniform1i(shape_type_loc, my_shape_type);
 	glUniform1f(Shine_loc, my_shine);
 	glUniform4fv(A_loc, 1, (GLfloat*) &ambient);
@@ -212,6 +221,16 @@ void display(void) {
 				walls[i][j]->draw();
 			} else if (map[i][j] == '.') { // empty
 				//nothing to do here :P
+			}
+		}
+	}
+	bufferBeforeDrawHole();
+	for (int i = 0; i < lvl_height; i++) {
+		for (int j = 0; j < lvl_width; j++) {
+			if (map[i][j] == 'O') { //hole
+				M_mat = holes[i][j]->translation * holes[i][j]->rotation;
+				glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
+				holes[i][j]->draw();
 			}
 		}
 	}
@@ -320,64 +339,60 @@ float speedx = 0;
 
 #define magic 0.19
 
-void ball_fall_check(){
-	int dx[] = {0,0,1,-1};
-	int dy[] = {1,-1,0,0};
+void ball_fall_check() {
+	int dx[] = { 0, 0, 1, -1 };
+	int dy[] = { 1, -1, 0, 0 };
 
 	int cube_x, cube_z; // cube indices of the ball
 
 
 	GLfloat temp_x, temp_z, r = _ball->radius;
 	for (int i = 0; i < 4; ++i) {
-		temp_x = _ball->j+r*dx[i];
-		temp_z = _ball->i+r*dy[i];
-
+		temp_x = _ball->j + r * dx[i];
+		temp_z = _ball->i + r * dy[i];
 
 	}
 
 }
 
-
 void animate(int n) {
-        mat4 tmp = _ball->translation;
-        vec4 pos = tmp * vec3(0, 0, 0); //FIXME why do u need multiplication ??
-        tmp *= Translate(speedz, 0, 0);
-        pos = tmp * vec3(0, 0, 0);
-        pos[0] += lvl_width / 2.0;
-        pos[2] += lvl_height / 2.0;
-        //        cout << speedx << " "<< speedz << endl;
-        if (map[(int) ceil(pos[2] - magic)][(int) floor(pos[0] + magic)] == '#'
-                        || map[(int) floor(pos[2] + magic)][(int) ceil(pos[0] - magic)]
-                                        == '#'
-                        || map[(int) floor(pos[2] + magic)][(int) floor(pos[0] + magic)]
-                                        == '#'
-                        || map[(int) ceil(pos[2] - magic)][(int) ceil(pos[0] - magic)]
-                                        == '#') {
-                tmp = _ball->translation;
-                speedz = 0;
-        } else {
-                speedz += -zangle / 5000.0;
-        }
-        mat4 tt = tmp;
-        tmp *= Translate(0, 0, speedx);
-        pos = tmp * vec3(0, 0, 0);
-        pos[0] += lvl_height / 2.0;
-        pos[2] += lvl_width / 2.0;
-        if (map[(int) ceil(pos[2] - magic)][(int) floor(pos[0] + magic)] == '#'
-                        || map[(int) floor(pos[2] + magic)][(int) ceil(pos[0] - magic)]
-                                        == '#'
-                        || map[(int) floor(pos[2] + magic)][(int) floor(pos[0] + magic)]
-                                        == '#'
-                        || map[(int) ceil(pos[2] - magic)][(int) ceil(pos[0] - magic)]
-                                        == '#') {
-                tmp = tt;
-                speedx = 0;
-        } else {
-                speedx += xangle / 5000.0;
-        }
-        _ball->translation = tmp;
-        display();
-        glutTimerFunc(TIMERMSECS, animate, 0);
+	mat4 tmp = _ball->translation;
+	vec4 pos = tmp * vec3(0, 0, 0); //FIXME why do u need multiplication ??
+	tmp *= Translate(speedz, 0, 0);
+	pos = tmp * vec3(0, 0, 0);
+	pos[0] += lvl_width / 2.0;
+	pos[2] += lvl_height / 2.0;
+	//        cout << speedx << " "<< speedz << endl;
+	if (map[(int) ceil(pos[2] - magic)][(int) floor(pos[0] + magic)] == '#'
+			|| map[(int) floor(pos[2] + magic)][(int) ceil(pos[0] - magic)]
+					== '#' || map[(int) floor(pos[2] + magic)][(int) floor(
+			pos[0] + magic)] == '#'
+			|| map[(int) ceil(pos[2] - magic)][(int) ceil(pos[0] - magic)]
+					== '#') {
+		tmp = _ball->translation;
+		speedz = 0;
+	} else {
+		speedz += -zangle / 5000.0;
+	}
+	mat4 tt = tmp;
+	tmp *= Translate(0, 0, speedx);
+	pos = tmp * vec3(0, 0, 0);
+	pos[0] += lvl_height / 2.0;
+	pos[2] += lvl_width / 2.0;
+	if (map[(int) ceil(pos[2] - magic)][(int) floor(pos[0] + magic)] == '#'
+			|| map[(int) floor(pos[2] + magic)][(int) ceil(pos[0] - magic)]
+					== '#' || map[(int) floor(pos[2] + magic)][(int) floor(
+			pos[0] + magic)] == '#'
+			|| map[(int) ceil(pos[2] - magic)][(int) ceil(pos[0] - magic)]
+					== '#') {
+		tmp = tt;
+		speedx = 0;
+	} else {
+		speedx += xangle / 5000.0;
+	}
+	_ball->translation = tmp;
+	display();
+	glutTimerFunc(TIMERMSECS, animate, 0);
 }
 
 //=========
