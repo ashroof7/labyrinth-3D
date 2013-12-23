@@ -303,44 +303,48 @@ float speedx = 0;
 #define magic 0.19
 
 void animate(int n) {
-	mat4 tmp = _ball->translation;
-	vec4 pos = tmp * vec3(0, 0, 0);
-	tmp *= Translate(speedz, 0, 0);
-	pos = tmp * vec3(0, 0, 0);
-	pos[0] += lvl_width / 2.0;
-	pos[2] += lvl_height / 2.0;
-	//        cout << speedx << " "<< speedz << endl;
-	if (map[(int) ceil(pos[2] - 0.3)][(int) floor(pos[0] + 0.3)] == '#'
-			|| map[(int) floor(pos[2] + 0.3)][(int) ceil(pos[0] - 0.3)] == '#'
-			|| map[(int) floor(pos[2] + 0.3)][(int) floor(pos[0] + 0.3)] == '#'
-			|| map[(int) ceil(pos[2] - 0.3)][(int) ceil(pos[0] - 0.3)] == '#') {
-		tmp = _ball->translation;
-		speedz = 0;
-		cout << "fk" << endl;
-	} else {
-		speedz += -zangle / 5000.0;
-	}
-	mat4 tt = tmp;
-	tmp *= Translate(0, 0, speedx);
-	pos = tmp * vec3(0, 0, 0);
-	pos[0] += lvl_height / 2.0;
-	pos[2] += lvl_width / 2.0;
-	if (map[(int) ceil(pos[2] - magic)][(int) floor(pos[0] + magic)] == '#'
-			|| map[(int) floor(pos[2] + magic)][(int) ceil(pos[0] - magic)]
-					== '#'
-			|| map[(int) floor(pos[2] + magic)][(int) floor(pos[0] + magic)]
-					== '#'
-			|| map[(int) ceil(pos[2] - magic)][(int) ceil(pos[0] - magic)]
-					== '#') {
-		tmp = tt;
-		speedx = 0;
-	} else {
-		speedx += xangle / 5000.0;
-	}
-	_ball->translation = tmp;
-	display();
-	glutTimerFunc(TIMERMSECS, animate, 0);
+        mat4 tmp = _ball->translation;
+        vec4 pos = tmp * vec3(0, 0, 0);
+        tmp *= Translate(speedz, 0, 0);
+        pos = tmp * vec3(0, 0, 0);
+        pos[0] += lvl_width / 2.0;
+        pos[2] += lvl_height / 2.0;
+        //        cout << speedx << " "<< speedz << endl;
+        if (map[(int) ceil(pos[2] - magic)][(int) floor(pos[0] + magic)] == '#'
+                        || map[(int) floor(pos[2] + magic)][(int) ceil(pos[0] - magic)]
+                                        == '#'
+                        || map[(int) floor(pos[2] + magic)][(int) floor(pos[0] + magic)]
+                                        == '#'
+                        || map[(int) ceil(pos[2] - magic)][(int) ceil(pos[0] - magic)]
+                                        == '#') {
+                tmp = _ball->translation;
+                speedz = 0;
+                cout << "fk" << endl;
+        } else {
+                speedz += -zangle / 5000.0;
+        }
+        mat4 tt = tmp;
+        tmp *= Translate(0, 0, speedx);
+        pos = tmp * vec3(0, 0, 0);
+        pos[0] += lvl_height / 2.0;
+        pos[2] += lvl_width / 2.0;
+        if (map[(int) ceil(pos[2] - magic)][(int) floor(pos[0] + magic)] == '#'
+                        || map[(int) floor(pos[2] + magic)][(int) ceil(pos[0] - magic)]
+                                        == '#'
+                        || map[(int) floor(pos[2] + magic)][(int) floor(pos[0] + magic)]
+                                        == '#'
+                        || map[(int) ceil(pos[2] - magic)][(int) ceil(pos[0] - magic)]
+                                        == '#') {
+                tmp = tt;
+                speedx = 0;
+        } else {
+                speedx += xangle / 5000.0;
+        }
+        _ball->translation = tmp;
+        display();
+        glutTimerFunc(TIMERMSECS, animate, 0);
 }
+
 //=========
 //main loop
 //=========
