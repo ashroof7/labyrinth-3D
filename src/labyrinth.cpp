@@ -459,7 +459,7 @@ void animate(int n) {
 	}
 	if (win) {
 		win_cnt--;
-		_ball->translation *= Translate(0, -0.05, 0);
+		_ball->translation *= Translate(0, +0.05, 0);
 		W_mat *= RotateZ(1) * RotateX(1);
 		glUniformMatrix4fv(W_loc, 1, GL_TRUE, W_mat);
 		display();
@@ -475,7 +475,6 @@ void animate(int n) {
 	pos = tmp * vec3(0, 0, 0);
 	pos[0] += lvl_width / 2.0;
 	pos[2] += lvl_height / 2.0;
-	//        cout << speedx << " "<< speedz << endl;
 	if (map[(int) ceil(pos[2] - magic)][(int) floor(pos[0] + magic)] == '#'
 			|| map[(int) floor(pos[2] + magic)][(int) ceil(pos[0] - magic)]
 					== '#'
@@ -515,8 +514,6 @@ void animate(int n) {
 //=========
 
 int main(int argc, char **argv) {
-
-
 
 	glutInit(&argc, argv);
 	glEnable(GL_DEPTH_TEST);
