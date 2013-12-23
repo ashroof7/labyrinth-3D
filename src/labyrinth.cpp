@@ -1,6 +1,8 @@
 #include "include/Angel.h"
 #include "cube.h"
 #include "ball.h"
+#include "base.h"
+
 #include <iostream>
 #include <time.h>
 #include <sys/time.h>
@@ -31,7 +33,7 @@ mat4 W_mat = mat4(1.0); // World matrix (rotation of cube by mouse)
 mat4 P_mat = mat4(1.0); // projection matrix
 
 //vec3 eye(2,10,-10);
-vec3 eye(1, 10, 0);
+vec3 eye(0, 10, 10);
 
 // test cube for EPIC RADO :D :D
 cube *test_cube;
@@ -42,8 +44,10 @@ const int lvl_height = 7;
 GLuint cube_width = 1;
 GLuint cube_height = 1;
 GLuint uniform_tex_sampler;
+
 float xangle = 0;
 float zangle = 0;
+
 char map[7][7] = { { '#', '#', '#', '#', '#', '#', '#' }, { '#', '.', '.', '#',
 		'.', '.', '#' }, { '#', '.', '.', '#', '.', '.', '#' }, { '#', '.', '#',
 		'#', '#', '#', '#' }, { '#', '.', '.', '#', '.', '.', '#' }, { '#', '#',
@@ -53,10 +57,12 @@ char map[7][7] = { { '#', '#', '#', '#', '#', '#', '#' }, { '#', '.', '.', '#',
 
 cube * walls[lvl_height][lvl_width];
 ball * _ball;
+base * _base;
 //==================
 //openGL functions
 //==================
 
+//TODO remove
 inline void create_buffer(GLuint* vbo, size_t pts_size, const GLvoid * pts,
 		size_t color_size, const GLvoid * color) {
 	// example code to be replaced with project customized code
@@ -74,29 +80,35 @@ inline void create_buffer(GLuint* vbo, size_t pts_size, const GLvoid * pts,
 }
 
 void build_lvl() {
-	for (int i = 0; i < lvl_height; ++i) {
-		for (int j = 0; j < lvl_width; ++j) {
-			if (map[i][j] == '#') { //wall
-				walls[i][j] = new cube(program, 0);
-				walls[i][j]->translation = Translate(
-						(-1.0 * lvl_width / 2 + j) * cube_width, 0,
-						(-1.0 * lvl_height / 2 + i) * cube_height);
-			} else if (map[i][j] == '.') {	// empty
-				//nothing to do here :P
-			}
-		}
-	}
-	_ball = new ball(program, 0.3, 1, 1);
-	_ball->translation = Translate(
-			(-1.0 * lvl_width / 2 + _ball->i) * cube_width, 0,
-			(-1.0 * lvl_height / 2 + _ball->j) * cube_height);
+
+	vec3 upper_left  = vec3(-(lvl_width*cube_width/2.0+cube_width), 0,-(lvl_height*cube_height/2.0+cube_height));
+	vec3 lower_right = vec3( (lvl_width*cube_width/2.0+cube_width), 0, (lvl_height*cube_height/2.0+cube_height));
+	_base = new base(program, 0, upper_left, lower_right);
+
+//	for (int i = 0; i < lvl_height; ++i) {
+//		for (int j = 0; j < lvl_width; ++j) {
+//			if (map[i][j] == '#') { //wall
+//				walls[i][j] = new cube(program, 0);
+//				walls[i][j]->translation = Translate(
+//						(-1.0 * lvl_width / 2 + j) * cube_width, 0,
+//						(-1.0 * lvl_height / 2 + i) * cube_height);
+//			} else if (map[i][j] == '.') {	// empty
+//				//nothing to do here :P
+//			}
+//		}
+//	}
+//	_ball = new ball(program, 0.3, 1, 1);
+//	_ball->translation = Translate(
+//			(-1.0 * lvl_width / 2 + _ball->i) * cube_width, 0,
+//			(-1.0 * lvl_height / 2 + _ball->j) * cube_height);
+
 }
 
 void init_buffers() {
 // Initializing  VAOs and VBOs
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-	test_cube = new cube(program, 0);
+//	glGenVertexArrays(1, &vao);
+//	glBindVertexArray(vao);
+//	test_cube = new cube(program, 0);
 }
 
 void init(void) {
@@ -135,28 +147,33 @@ void init(void) {
 void display(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the window//
 
-	glEnableVertexAttribArray(vao);
-	glBindVertexArray(vao);
+//	glEnableVertexAttribArray(vao);
+//	glBindVertexArray(vao);
 
 // update rotation and translation matrices of each object before uploading to shader
 //	glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
 //	test_cube->draw();
 
-	for (int i = 0; i < lvl_height; ++i) {
-		for (int j = 0; j < lvl_width; ++j) {
-			if (map[i][j] == '#') { //wall
-				M_mat = walls[i][j]->translation * walls[i][j]->rotation;
-				glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
-				walls[i][j]->draw();
-			} else if (map[i][j] == '.') { // empty
-				//nothing to do here :P
-			}
-		}
-	}
-	M_mat = _ball->translation;
-	glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
-	_ball->draw();
-	glDisableVertexAttribArray(vao);
+
+//	for (int i = 0; i < lvl_height; ++i) {
+//		for (int j = 0; j < lvl_width; ++j) {
+//			if (map[i][j] == '#') { //wall
+//				M_mat = walls[i][j]->translation * walls[i][j]->rotation;
+//				glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
+//				walls[i][j]->draw();
+//			} else if (map[i][j] == '.') { // empty
+//				//nothing to do here :P
+//			}
+//		}
+//	}
+
+	_base->draw();
+
+
+//	M_mat = _ball->translation;
+//	glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
+//	_ball->draw();
+//	glDisableVertexAttribArray(vao);
 	glutSwapBuffers(); // Double buffering
 }
 
@@ -233,7 +250,7 @@ void onMotion(int x, int y) {
 			if (abs(zangle) > 30)
 				zangle -= (last_my - cur_my) / 3.0;
 
-			W_mat = RotateX(xangle) * RotateZ(zangle);
+//			W_mat = RotateX(xangle) * RotateZ(zangle);
 //			cout << last_mx - cur_mx << "  " << last_my - cur_my << endl;
 			last_mx = cur_mx;
 			last_my = cur_my;
@@ -303,7 +320,7 @@ int main(int argc, char **argv) {
 	glutCreateWindow("Labyrinth :D");
 	glewInit();
 	init();
-	glutTimerFunc(TIMERMSECS, animate, 0);
+//	glutTimerFunc(TIMERMSECS, animate, 0);
 	glutDisplayFunc(display);
 	glutKeyboardFunc(keyboard);
 	glutSpecialFunc(keyboard_special);

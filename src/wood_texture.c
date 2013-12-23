@@ -1,5 +1,8 @@
 /* GIMP RGB C-Source image dump (wood_texture_.c) */
 
+#ifndef WOOD_TEXTURE_H_
+#define WOOD_TEXTURE_H_
+
 struct gimp_image{
   unsigned int 	 width;
   unsigned int 	 height;
@@ -40033,3 +40036,4 @@ static const struct gimp_image wood_image = {
   "\334\266\207\331\261\200\334\264\203",
 };
 
+#endif /* WOOD_TEXTURE_H_ */

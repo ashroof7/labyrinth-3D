@@ -82,47 +82,47 @@ GLfloat cube::side_colors[] = {
 //				1.0, 0.5, 0.0, //orange
 //				0.0, 0.0, 0.0, //black
 
-		1.0, 1.0, 1.0, 0.0,
-		1.0, 1.0, 1.0, 0.0,
-		1.0, 1.0, 1.0, 0.0,
-		1.0, 1.0, 1.0, 0.0,
-		1.0, 1.0, 1.0, 0.0,
-		1.0, 1.0, 1.0, 0.0,
+		0.4, 0.4, 0.4, 1.0,
+		0.4, 0.4, 0.4, 1.0,
+		0.4, 0.4, 0.4, 1.0,
+		0.4, 0.4, 0.4, 1.0,
+		0.4, 0.4, 0.4, 1.0,
+		0.4, 0.4, 0.4, 1.0,
 
-		1.0, 1.0, 1.0, 0.0,
-		1.0, 1.0, 1.0, 0.0,
-		1.0, 1.0, 1.0, 0.0,
-		1.0, 1.0, 1.0, 0.0,
-		1.0, 1.0, 1.0, 0.0,
-		1.0, 1.0, 1.0, 0.0,
+		0.4, 0.4, 0.4, 1.0,
+		0.4, 0.4, 0.4, 1.0,
+		0.4, 0.4, 0.4, 1.0,
+		0.4, 0.4, 0.4, 1.0,
+		0.4, 0.4, 0.4, 1.0,
+		0.4, 0.4, 0.4, 1.0,
 
-		1.0, 1.0, 1.0, 0.0,
-		1.0, 1.0, 1.0, 0.0,
-		1.0, 1.0, 1.0, 0.0,
-		1.0, 1.0, 1.0, 0.0,
-		1.0, 1.0, 1.0, 0.0,
-		1.0, 1.0, 1.0, 0.0,
+		0.4, 0.4, 0.4, 1.0,
+		0.4, 0.4, 0.4, 1.0,
+		0.4, 0.4, 0.4, 1.0,
+		0.4, 0.4, 0.4, 1.0,
+		0.4, 0.4, 0.4, 1.0,
+		0.4, 0.4, 0.4, 1.0,
 
-		1.0, 1.0, 1.0, 0.0,
-		1.0, 1.0, 1.0, 0.0,
-		1.0, 1.0, 1.0, 0.0,
-		1.0, 1.0, 1.0, 0.0,
-		1.0, 1.0, 1.0, 0.0,
-		1.0, 1.0, 1.0, 0.0,
+		0.4, 0.4, 0.4, 1.0,
+		0.4, 0.4, 0.4, 1.0,
+		0.4, 0.4, 0.4, 1.0,
+		0.4, 0.4, 0.4, 1.0,
+		0.4, 0.4, 0.4, 1.0,
+		0.4, 0.4, 0.4, 1.0,
 
-		1.0, 1.0, 1.0, 0.0,
-		1.0, 1.0, 1.0, 0.0,
-		1.0, 1.0, 1.0, 0.0,
-		1.0, 1.0, 1.0, 0.0,
-		1.0, 1.0, 1.0, 0.0,
-		1.0, 1.0, 1.0, 0.0,
+		0.4, 0.4, 0.4, 1.0,
+		0.4, 0.4, 0.4, 1.0,
+		0.4, 0.4, 0.4, 1.0,
+		0.4, 0.4, 0.4, 1.0,
+		0.4, 0.4, 0.4, 1.0,
+		0.4, 0.4, 0.4, 1.0,
 
-		1.0, 1.0, 1.0, 0.0,
-		1.0, 1.0, 1.0, 0.0,
-		1.0, 1.0, 1.0, 0.0,
-		1.0, 1.0, 1.0, 0.0,
-		1.0, 1.0, 1.0, 0.0,
-		1.0, 1.0, 1.0, 0.0,
+		0.4, 0.4, 0.4, 1.0,
+		0.4, 0.4, 0.4, 1.0,
+		0.4, 0.4, 0.4, 1.0,
+		0.4, 0.4, 0.4, 1.0,
+		0.4, 0.4, 0.4, 1.0,
+		0.4, 0.4, 0.4, 1.0,
 
 };
 
@@ -193,12 +193,15 @@ cube::cube(GLuint program, int offset_index) {
 	translation = mat4(1.0);
 	rotation = mat4(1.0);
 
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+
 	// base cube elements
 	glGenBuffers(1, &base_elements_ibo);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, base_elements_ibo);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(base_elements), base_elements,
 			GL_STATIC_DRAW);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); // why this line?!?!
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 	// side vertices
 	glGenBuffers(1, &pos_vbo);
@@ -237,10 +240,11 @@ cube::cube(GLuint program, int offset_index) {
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wood_image.width, wood_image.height,
 			0, GL_RGB, GL_UNSIGNED_BYTE, wood_image.pixel_data);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
 }
 
 cube::cube() {
-	col_vbo = pos_vbo = base_elements_ibo = texture_id = tex_coord = -1;
+	vao = col_vbo = pos_vbo = base_elements_ibo = texture_id = tex_coord = -1;
 }
 
 cube::~cube() {
@@ -252,6 +256,9 @@ cube::~cube() {
 
 void cube::draw() {
 	//	 draw base using buffer element
+	glEnableVertexAttribArray(vao);
+	glBindVertexArray(vao);
+
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, base_elements_ibo);
 	GLint size;
 	glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
@@ -260,4 +267,6 @@ void cube::draw() {
 //		glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
 	glDrawArrays(GL_TRIANGLES, 0,36);
 
+	glBindVertexArray(0);
+	glDisableVertexAttribArray(vao);
 }

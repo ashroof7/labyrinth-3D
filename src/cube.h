@@ -8,8 +8,8 @@
 #ifndef CUBE_H_
 #define CUBE_H_
 
-//#include <GL/glew.h>
-//#include <GL/glut.h>
+#include <GL/glew.h>
+#include <GL/glut.h>
 #include "include/Angel.h"
 #include "wood_texture.c"
 
@@ -26,7 +26,7 @@ private:
 
 public:
 	mat4 translation, rotation;
-	GLuint pos_vbo, col_vbo, base_elements_ibo, tex_coord, texture_id;
+	GLuint pos_vbo, col_vbo, base_elements_ibo, tex_coord, texture_id, vao;
 	cube();
 	cube(GLuint program, int offset_index);
 	virtual ~cube();
