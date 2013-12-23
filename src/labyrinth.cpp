@@ -37,10 +37,10 @@ mat4 V_mat = mat4(1.0); // View matrix
 mat4 W_mat = mat4(1.0); // World matrix (rotation of cube by mouse)
 mat4 P_mat = mat4(1.0); // projection matrix
 
-
 const int lvl_width = 7;
 const int lvl_height = 7;
-
+bool falling = 0;
+bool win = 0;
 GLfloat cube_width = 1.0;
 GLfloat cube_height = 1.0;
 GLfloat cube_depth = 1.0;
@@ -52,10 +52,9 @@ float xangle = 0;
 float zangle = 0;
 
 char map[7][7] = { { '#', '#', '#', '#', '#', '#', '#' }, { '#', '.', '.', '#',
-		'.', '.', '#' }, { '#', '.', 'O', '#', '.', '.', '#' }, { '#', '.',
-		'#', '#', '#', '#', '#' }, { '#', '.', '.', '#', '.', '.', '#' }, {
-		'#', '#', 'T', '.', 'O', '.', '#' }, { '#', '#', '#', '#', '#', '#',
-		'#' } };
+		'.', '.', '#' }, { '#', '.', 'O', '#', '.', '.', '#' }, { '#', '.', '#',
+		'#', '#', '#', '#' }, { '#', '.', '.', '#', '.', '.', '#' }, { '#', '#',
+		'T', '.', 'O', '.', '#' }, { '#', '#', '#', '#', '#', '#', '#' } };
 
 cube * walls[lvl_height][lvl_width];
 hole * holes[lvl_height][lvl_width];
@@ -65,17 +64,15 @@ base * _base;
 //openGL functions
 //==================
 
-
 void build_lvl() {
 	// notice that everything is shifted by cube_side/2 to ease calculations
 	// Handled by centering the camera @ cube_side/2
 
-
 	// building base
-	vec3 upper_left = vec3(-((lvl_width + 1) * cube_width / 2.0), -cube_depth
-			/ 2.0 - 0.001, -((lvl_height + 1) * cube_height / 2.0));
-	vec3 lower_right = vec3((lvl_width - 1) * cube_width / 2.0, -cube_depth
-			/ 2.0 - 0.001, (lvl_height - 1) * cube_height / 2.0);
+	vec3 upper_left = vec3(-((lvl_width + 1) * cube_width / 2.0),
+			-cube_depth / 2.0 - 0.001, -((lvl_height + 1) * cube_height / 2.0));
+	vec3 lower_right = vec3((lvl_width - 1) * cube_width / 2.0,
+			-cube_depth / 2.0 - 0.001, (lvl_height - 1) * cube_height / 2.0);
 	_base = new base(program, 0, upper_left, lower_right);
 
 	// building walls and holes
@@ -83,22 +80,23 @@ void build_lvl() {
 		for (int j = 0; j < lvl_width; ++j) {
 			if (map[i][j] == '#') { //wall
 				walls[i][j] = new cube();
-				walls[i][j]->translation = Translate((-1.0 * lvl_width / 2 + j)
-						* cube_width, 0, (-1.0 * lvl_height / 2 + i)
-						* cube_height);
-			} else if (map[i][j] == 'O' || map[i][j]=='T') { //hole
+				walls[i][j]->translation = Translate(
+						(-1.0 * lvl_width / 2 + j) * cube_width, 0,
+						(-1.0 * lvl_height / 2 + i) * cube_height);
+			} else if (map[i][j] == 'O' || map[i][j] == 'T') { //hole
 				holes[i][j] = new hole();
-				holes[i][j]->translation = Translate((-1.0 * lvl_width / 2 + j)
-						* cube_width, 0, (-1.0 * lvl_height / 2 + i)
-						* cube_height);
+				holes[i][j]->translation = Translate(
+						(-1.0 * lvl_width / 2 + j) * cube_width, 0,
+						(-1.0 * lvl_height / 2 + i) * cube_height);
 			}
 		}
 	}
 
 	//building ball
 	_ball = new ball(program, 0.3, 1, 1);
-	_ball->translation = Translate((-1.0 * lvl_width / 2 + _ball->i)
-			* cube_width, 0, (-1.0 * lvl_height / 2 + _ball->j) * cube_height);
+	_ball->translation = Translate(
+			(-1.0 * lvl_width / 2 + _ball->i) * cube_width, 0,
+			(-1.0 * lvl_height / 2 + _ball->j) * cube_height);
 }
 
 void init_objects() {
@@ -249,14 +247,14 @@ void display(void) {
 	}
 	bufferBeforeDrawTargetHole();
 	for (int i = 0; i < lvl_height; i++) {
-			for (int j = 0; j < lvl_width; j++) {
-				if (map[i][j] == 'T') {
-					M_mat = holes[i][j]->translation * holes[i][j]->rotation;
-					glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
-					holes[i][j]->draw();
-				}
+		for (int j = 0; j < lvl_width; j++) {
+			if (map[i][j] == 'T') {
+				M_mat = holes[i][j]->translation * holes[i][j]->rotation;
+				glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
+				holes[i][j]->draw();
 			}
 		}
+	}
 	bufferBeforeDrawBall();
 
 	M_mat = _ball->translation;
@@ -283,13 +281,13 @@ void keyboard_special(int key, int x, int y) {
 		break;
 	case GLUT_KEY_DOWN:
 		eye[1] += 0.5;
-		glUniformMatrix4fv(V_loc, 1, GL_TRUE, LookAt(eye, vec3(0, 0, 0), vec3(
-				0, 1, 0)));
+		glUniformMatrix4fv(V_loc, 1, GL_TRUE,
+				LookAt(eye, vec3(0, 0, 0), vec3(0, 1, 0)));
 		break;
 	case GLUT_KEY_UP:
 		eye[1] -= 0.5;
-		glUniformMatrix4fv(V_loc, 1, GL_TRUE, LookAt(eye, vec3(0, 0, 0), vec3(
-				0, 1, 0)));
+		glUniformMatrix4fv(V_loc, 1, GL_TRUE,
+				LookAt(eye, vec3(0, 0, 0), vec3(0, 1, 0)));
 		break;
 	}
 }
@@ -308,8 +306,8 @@ void onReshape(int width, int height) {
 
 vec3 get_arcball_vector(int x, int y) { // what is the purpose of this method?
 	//        convert the x,y screen coordinates to [-1,1] coordinates (and reverse y coordinates)
-	vec3 P = vec3(1.0 * x / screen_width * 2 - 1.0, 1.0 * y / screen_height * 2
-			- 1.0, 0);
+	vec3 P = vec3(1.0 * x / screen_width * 2 - 1.0,
+			1.0 * y / screen_height * 2 - 1.0, 0);
 	P.y = -P.y;
 
 	float OP_squared = P.x * P.x + P.y * P.y;
@@ -343,9 +341,9 @@ void onMotion(int x, int y) {
 			zangle += (last_mx - cur_mx) / 5.0;
 			xangle += -(last_my - cur_my) / 5.0;
 			if (abs(zangle) > 30)
-				zangle -= (last_mx - cur_mx) / 3.0;
+				zangle -= (last_mx - cur_mx) / 5.0;
 			if (abs(xangle) > 30)
-				xangle += (last_my - cur_my) / 3.0;
+				xangle += (last_my - cur_my) / 5.0;
 
 			W_mat = RotateX(xangle) * RotateZ(zangle);
 			last_mx = cur_mx;
@@ -358,28 +356,63 @@ void onMotion(int x, int y) {
 }
 float speedz = 0;
 float speedx = 0;
-
+int falling_cnt;
+int win_cnt;
 #define magic 0.19
 
 void ball_fall_check() {
-	int dx[] = { 0, 0, 1, -1 };
-	int dy[] = { 1, -1, 0, 0 };
+	vec4 pos = _ball->translation * vec3(0, 0, 0);
+	pos[0] += lvl_width / 2.0;
+	pos[2] += lvl_height / 2.0;
 
-	int cube_x, cube_z; // cube indices of the ball
-
-
-	GLfloat temp_x, temp_z, r = _ball->radius;
-	for (int i = 0; i < 4; ++i) {
-		temp_x = _ball->j + r * dx[i];
-		temp_z = _ball->i + r * dy[i];
-
+	if (map[(int) pos[2]][(int) pos[0]] == 'O') {
+		falling = true;
+		falling_cnt = 1000 / TIMERMSECS;
+	} else if (map[(int) pos[2]][(int) pos[0]] == 'T') {
+		win = true;
+		win_cnt = 4 * 1000 / TIMERMSECS;
+		cout << "sadf" << endl;
 	}
-
 }
 
 void animate(int n) {
+	if (falling) {
+		falling_cnt--;
+		_ball->translation *= Translate(0, -0.1, 0);
+		display();
+		glutTimerFunc(TIMERMSECS, animate, 0);
+		if (falling_cnt == 0) {
+			falling = false;
+			xangle = zangle = speedx = speedz = 0;
+			W_mat = RotateX(0) * RotateZ(0);
+			_ball->translation = Translate(
+					(-1.0 * lvl_width / 2 + 1) * cube_width, 0,
+					(-1.0 * lvl_height / 2 + 1) * cube_height);
+			glUniformMatrix4fv(W_loc, 1, GL_TRUE, W_mat);
+		}
+		return;
+	}
+	if (win) {
+		win_cnt--;
+		_ball->translation *= Translate(0, 0.05, 0);
+		W_mat *= RotateZ(1) * RotateX(1);
+		glUniformMatrix4fv(W_loc, 1, GL_TRUE, W_mat);
+		display();
+		glutTimerFunc(TIMERMSECS, animate, 0);
+		if (win_cnt == 0) {
+			win = false;
+			xangle = zangle = speedx = speedz = 0;
+			W_mat = RotateX(0) * RotateZ(0);
+			_ball->translation = Translate(
+					(-1.0 * lvl_width / 2 + 1) * cube_width, 0,
+					(-1.0 * lvl_height / 2 + 1) * cube_height);
+			glUniformMatrix4fv(W_loc, 1, GL_TRUE, W_mat);
+		}
+		return;
+	}
+	ball_fall_check();
 	mat4 tmp = _ball->translation;
-	vec4 pos = tmp * vec3(0, 0, 0); //FIXME why do u need multiplication ??
+	vec4 pos = tmp * vec3(0, 0, 0); //FIXME why do u need multiplication ?? 3shan yetla3lak vec4 badal maheya mat4
 	tmp *= Translate(speedz, 0, 0);
 	pos = tmp * vec3(0, 0, 0);
 	pos[0] += lvl_width / 2.0;
@@ -387,8 +420,9 @@ void animate(int n) {
 	//        cout << speedx << " "<< speedz << endl;
 	if (map[(int) ceil(pos[2] - magic)][(int) floor(pos[0] + magic)] == '#'
 			|| map[(int) floor(pos[2] + magic)][(int) ceil(pos[0] - magic)]
-					== '#' || map[(int) floor(pos[2] + magic)][(int) floor(
-			pos[0] + magic)] == '#'
+					== '#'
+			|| map[(int) floor(pos[2] + magic)][(int) floor(pos[0] + magic)]
+					== '#'
 			|| map[(int) ceil(pos[2] - magic)][(int) ceil(pos[0] - magic)]
 					== '#') {
 		tmp = _ball->translation;
@@ -403,8 +437,9 @@ void animate(int n) {
 	pos[2] += lvl_width / 2.0;
 	if (map[(int) ceil(pos[2] - magic)][(int) floor(pos[0] + magic)] == '#'
 			|| map[(int) floor(pos[2] + magic)][(int) ceil(pos[0] - magic)]
-					== '#' || map[(int) floor(pos[2] + magic)][(int) floor(
-			pos[0] + magic)] == '#'
+					== '#'
+			|| map[(int) floor(pos[2] + magic)][(int) floor(pos[0] + magic)]
+					== '#'
 			|| map[(int) ceil(pos[2] - magic)][(int) ceil(pos[0] - magic)]
 					== '#') {
 		tmp = tt;
@@ -425,7 +460,8 @@ int main(int argc, char **argv) {
 
 	glutInit(&argc, argv);
 	glEnable(GL_DEPTH_TEST);
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE | GLUT_MULTISAMPLE);
+	glutInitDisplayMode(
+			GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE | GLUT_MULTISAMPLE);
 	glutInitWindowSize(screen_width, screen_height);
 
 	//----------------------------------------
