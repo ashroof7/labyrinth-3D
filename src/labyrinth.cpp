@@ -44,8 +44,9 @@ cube *test_cube;
 const int lvl_width = 7;
 const int lvl_height = 7;
 
-GLuint cube_width = 1;
-GLuint cube_height = 1;
+GLfloat cube_width  = 1.0;
+GLfloat cube_height = 1.0;
+GLfloat cube_depth  = 1.0;
 GLuint uniform_tex_sampler;
 
 float xangle = 0;
@@ -68,10 +69,16 @@ base * _base;
 
 
 void build_lvl() {
-	vec3 upper_left = vec3(-(lvl_width * cube_width / 2.0 + cube_width), 0,
-			-(lvl_height * cube_height / 2.0 + cube_height));
-	vec3 lower_right = vec3((lvl_width * cube_width / 2.0 + cube_width), 0,
-			(lvl_height * cube_height / 2.0 + cube_height));
+	vec3 upper_left = vec3(
+			-( (lvl_width+1)*cube_width / 2.0  ),
+			-cube_depth/2.0-0.001,
+			-( (lvl_height+1) * cube_height / 2.0 )
+			);
+	vec3 lower_right = vec3(
+			 (lvl_width-1)* cube_width / 2.0 ,
+			-cube_depth/2.0-0.001,
+			 (lvl_height-1) * cube_height / 2.0
+			);
 	_base = new base(program, 0, upper_left, lower_right);
 
 	for (int i = 0; i < lvl_height; ++i) {
@@ -178,7 +185,9 @@ void bufferBeforeDrawSufrace() {
 void display(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the window//
 
-//	_base->draw();
+	M_mat = _base->translation * _base->rotation;
+	glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
+	_base->draw();
 
 	bufferBeforeDrawCube();
 
