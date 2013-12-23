@@ -28,6 +28,7 @@ GLuint hole_vao;
 
 GLuint P_loc, M_loc, V_loc, W_loc; // locations pointers of P, M, V, W matrices in shader
 GLuint A_loc, D_loc, S_loc, Shine_loc;
+GLuint mask_loc;
 GLuint shape_type_loc;
 
 mat4 I_mat = mat4(1.0); // Identity matrix
@@ -40,9 +41,9 @@ mat4 P_mat = mat4(1.0); // projection matrix
 const int lvl_width = 7;
 const int lvl_height = 7;
 
-GLfloat cube_width  = 1.0;
+GLfloat cube_width = 1.0;
 GLfloat cube_height = 1.0;
-GLfloat cube_depth  = 1.0;
+GLfloat cube_depth = 1.0;
 GLuint uniform_tex_sampler;
 
 vec3 eye(-0.5, 6, 4);
@@ -50,13 +51,11 @@ vec3 eye(-0.5, 6, 4);
 float xangle = 0;
 float zangle = 0;
 
-char map[7][7] = { { '#', '#', '#', '#', '#', '#', '#' },
-				   { '#', '.', '.', '#', '.', '.', '#' },
-				   { '#', '.', 'O', '#', '.', '.', '#' },
-				   { '#', '.', '#',	'#', '#', '#', '#' },
-				   { '#', '.', '.', '#', '.', '.', '#' },
-				   { '#', '#', '.', '.', 'O', '.', '#' },
-				   { '#', '#', '#', '#', '#', '#', '#' } };
+char map[7][7] = { { '#', '#', '#', '#', '#', '#', '#' }, { '#', '.', '.', '#',
+		'.', '.', '#' }, { '#', '.', 'O', '#', '.', '.', '#' }, { '#', '.',
+		'#', '#', '#', '#', '#' }, { '#', '.', '.', '#', '.', '.', '#' }, {
+		'#', '#', '.', '.', 'O', '.', '#' }, { '#', '#', '#', '#', '#', '#',
+		'#' } };
 
 cube * walls[lvl_height][lvl_width];
 hole * holes[lvl_height][lvl_width];
@@ -73,43 +72,34 @@ void build_lvl() {
 
 
 	// building base
-	vec3 upper_left = vec3(
-			-( (lvl_width+1)*cube_width / 2.0  ),
-			-cube_depth/2.0-0.001,
-			-( (lvl_height+1) * cube_height / 2.0 )
-			);
-	vec3 lower_right = vec3(
-			 (lvl_width-1)* cube_width / 2.0 ,
-			-cube_depth/2.0-0.001,
-			 (lvl_height-1) * cube_height / 2.0
-			);
+	vec3 upper_left = vec3(-((lvl_width + 1) * cube_width / 2.0), -cube_depth
+			/ 2.0 - 0.001, -((lvl_height + 1) * cube_height / 2.0));
+	vec3 lower_right = vec3((lvl_width - 1) * cube_width / 2.0, -cube_depth
+			/ 2.0 - 0.001, (lvl_height - 1) * cube_height / 2.0);
 	_base = new base(program, 0, upper_left, lower_right);
-
 
 	// building walls and holes
 	for (int i = 0; i < lvl_height; ++i) {
 		for (int j = 0; j < lvl_width; ++j) {
 			if (map[i][j] == '#') { //wall
 				walls[i][j] = new cube();
-				walls[i][j]->translation = Translate(
-						(-1.0 * lvl_width / 2 + j) * cube_width, 0,
-						(-1.0 * lvl_height / 2 + i) * cube_height);
-			}else if (map[i][j] == 'O') { //hole
+				walls[i][j]->translation = Translate((-1.0 * lvl_width / 2 + j)
+						* cube_width, 0, (-1.0 * lvl_height / 2 + i)
+						* cube_height);
+			} else if (map[i][j] == 'O') { //hole
 				holes[i][j] = new hole();
-				holes[i][j]->translation = Translate(
-						(-1.0 * lvl_width / 2 + j) * cube_width, 0,
-						(-1.0 * lvl_height / 2 + i) * cube_height);
+				holes[i][j]->translation = Translate((-1.0 * lvl_width / 2 + j)
+						* cube_width, 0, (-1.0 * lvl_height / 2 + i)
+						* cube_height);
 			}
 		}
 	}
 
 	//building ball
 	_ball = new ball(program, 0.3, 1, 1);
-	_ball->translation = Translate(
-			(-1.0 * lvl_width / 2 + _ball->i) * cube_width, 0,
-			(-1.0 * lvl_height / 2 + _ball->j) * cube_height);
+	_ball->translation = Translate((-1.0 * lvl_width / 2 + _ball->i)
+			* cube_width, 0, (-1.0 * lvl_height / 2 + _ball->j) * cube_height);
 }
-
 
 void init_objects() {
 	cube::init(program);
@@ -118,7 +108,7 @@ void init_objects() {
 
 void init(void) {
 
-// Load shaders and use the resulting shader program
+	// Load shaders and use the resulting shader program
 	program = InitShader("vshader.glsl", "fshader.glsl");
 	glUseProgram(program);
 	build_lvl();
@@ -137,6 +127,7 @@ void init(void) {
 	D_loc = glGetUniformLocation(program, "DiffuseProduct");
 	S_loc = glGetUniformLocation(program, "SpecularProduct");
 	Shine_loc = glGetUniformLocation(program, "Shininess");
+	mask_loc = glGetUniformLocation(program, "mask");
 	shape_type_loc = glGetUniformLocation(program, "shapeType");
 
 	glUniformMatrix4fv(P_loc, 1, GL_TRUE, P_mat);
@@ -182,32 +173,46 @@ void bufferBeforeDrawHole() {
 
 }
 void bufferBeforeDrawSufrace() {
-
+	vec4 ambient = vec4(0.7, 0.7, 0.7, 0.5);
+	vec4 diffuse = vec4(0.7, 0.7, 0.7, 1.0);
+	vec4 specular = vec4(1.0, 1.0, 1.0, 0.0);
+	GLfloat my_shine = 500;
+	GLint my_shape_type = 2;
+	glUniform1i(shape_type_loc, my_shape_type);
+	glUniform1f(Shine_loc, my_shine);
+	glUniform4fv(A_loc, 1, (GLfloat*) &ambient);
+	glUniform4fv(D_loc, 1, (GLfloat*) &diffuse);
+	glUniform4fv(S_loc, 1, (GLfloat*) &specular);
 }
-
+int dx[] = { -1, 0, 1, -1, 0, 1, -1, 0, 1 };
+int dy[] = { -1, -1, -1, 0, 0, 0, 1, 1, 1 };
 void display(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the window//
 
-	bufferBeforeDrawCube();
-
+	bufferBeforeDrawSufrace();
 	M_mat = _base->translation * _base->rotation;
 	glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
 	_base->draw();
 
+	bufferBeforeDrawCube();
 	for (int i = 0; i < lvl_height; ++i) {
 		for (int j = 0; j < lvl_width; ++j) {
 			if (map[i][j] == '#') { //wall
+				GLint mask = 0;
+				for (int d = 0; d < 9; d++) {
+					int ni = i + dx[d];
+					int nj = j + dy[d];
+					if (ni >= 0 && nj >= 0 && ni < lvl_height && nj < lvl_width
+							&& map[ni][nj] == '#')
+						mask |= 1 << d;
+				}
+				glUniform1i(mask_loc, mask);
 				M_mat = walls[i][j]->translation * walls[i][j]->rotation;
 				glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
 				walls[i][j]->draw();
-			}else if (map[i][j] == 'O') { //hole
-				M_mat = holes[i][j]->translation * holes[i][j]->rotation;
-				glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
-				holes[i][j]->draw();
-			}else if (map[i][j] == '.'){
+			} else if (map[i][j] == '.') { // empty
 				//nothing to do here :P
 			}
-
 		}
 	}
 
@@ -237,13 +242,13 @@ void keyboard_special(int key, int x, int y) {
 		break;
 	case GLUT_KEY_DOWN:
 		eye[1] += 0.5;
-		glUniformMatrix4fv(V_loc, 1, GL_TRUE,
-				LookAt(eye, vec3(0, 0, 0), vec3(0, 1, 0)));
+		glUniformMatrix4fv(V_loc, 1, GL_TRUE, LookAt(eye, vec3(0, 0, 0), vec3(
+				0, 1, 0)));
 		break;
 	case GLUT_KEY_UP:
 		eye[1] -= 0.5;
-		glUniformMatrix4fv(V_loc, 1, GL_TRUE,
-				LookAt(eye, vec3(0, 0, 0), vec3(0, 1, 0)));
+		glUniformMatrix4fv(V_loc, 1, GL_TRUE, LookAt(eye, vec3(0, 0, 0), vec3(
+				0, 1, 0)));
 		break;
 	}
 }
@@ -261,9 +266,9 @@ void onReshape(int width, int height) {
 }
 
 vec3 get_arcball_vector(int x, int y) { // what is the purpose of this method?
-//        convert the x,y screen coordinates to [-1,1] coordinates (and reverse y coordinates)
-	vec3 P = vec3(1.0 * x / screen_width * 2 - 1.0,
-			1.0 * y / screen_height * 2 - 1.0, 0);
+	//        convert the x,y screen coordinates to [-1,1] coordinates (and reverse y coordinates)
+	vec3 P = vec3(1.0 * x / screen_width * 2 - 1.0, 1.0 * y / screen_height * 2
+			- 1.0, 0);
 	P.y = -P.y;
 
 	float OP_squared = P.x * P.x + P.y * P.y;
@@ -290,7 +295,6 @@ void onMotion(int x, int y) {
 	if (arcball_on) { // if left button is pressed
 		cur_mx = x;
 		cur_my = y;
-
 
 		// YES x and z are switched with y and x
 		// don't ask :D
