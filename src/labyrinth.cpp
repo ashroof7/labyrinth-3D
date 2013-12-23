@@ -36,10 +36,6 @@ mat4 V_mat = mat4(1.0); // View matrix
 mat4 W_mat = mat4(1.0); // World matrix (rotation of cube by mouse)
 mat4 P_mat = mat4(1.0); // projection matrix
 
-vec3 eye(1, 10, 0);
-
-// test cube for EPIC RADO :D :D
-cube *test_cube;
 
 const int lvl_width = 7;
 const int lvl_height = 7;
@@ -49,15 +45,18 @@ GLfloat cube_height = 1.0;
 GLfloat cube_depth  = 1.0;
 GLuint uniform_tex_sampler;
 
+vec3 eye(-0.5, 6, 4);
+
 float xangle = 0;
 float zangle = 0;
 
-char map[7][7] = { { '#', '#', '#', '#', '#', '#', '#' }, { '#', '.', '.', '#',
-		'.', '.', '#' }, { '#', '.', 'O', '#', '.', '.', '#' }, { '#', '.', '#',
-		'#', '#', '#', '#' }, { '#', '.', '.', '#', '.', '.', '#' }, { '#', '#',
-		'.', '.', 'O', '.', '#' }, { '#', '#', '#', '#', '#', '#', '#' } };
-
-//char map[1][1] = {{'#'}};
+char map[7][7] = { { '#', '#', '#', '#', '#', '#', '#' },
+				   { '#', '.', '.', '#', '.', '.', '#' },
+				   { '#', '.', 'O', '#', '.', '.', '#' },
+				   { '#', '.', '#',	'#', '#', '#', '#' },
+				   { '#', '.', '.', '#', '.', '.', '#' },
+				   { '#', '#', '.', '.', 'O', '.', '#' },
+				   { '#', '#', '#', '#', '#', '#', '#' } };
 
 cube * walls[lvl_height][lvl_width];
 hole * holes[lvl_height][lvl_width];
@@ -69,6 +68,11 @@ base * _base;
 
 
 void build_lvl() {
+	// notice that everything is shifted by cube_side/2 to ease calculations
+	// Handled by centering the camera @ cube_side/2
+
+
+	// building base
 	vec3 upper_left = vec3(
 			-( (lvl_width+1)*cube_width / 2.0  ),
 			-cube_depth/2.0-0.001,
@@ -81,6 +85,8 @@ void build_lvl() {
 			);
 	_base = new base(program, 0, upper_left, lower_right);
 
+
+	// building walls and holes
 	for (int i = 0; i < lvl_height; ++i) {
 		for (int j = 0; j < lvl_width; ++j) {
 			if (map[i][j] == '#') { //wall
@@ -88,12 +94,7 @@ void build_lvl() {
 				walls[i][j]->translation = Translate(
 						(-1.0 * lvl_width / 2 + j) * cube_width, 0,
 						(-1.0 * lvl_height / 2 + i) * cube_height);
-			}
-		}
-	}
-	for (int i = 0; i < lvl_height; ++i) {
-		for (int j = 0; j < lvl_width; ++j) {
-			if (map[i][j] == 'O') { //hole
+			}else if (map[i][j] == 'O') { //hole
 				holes[i][j] = new hole();
 				holes[i][j]->translation = Translate(
 						(-1.0 * lvl_width / 2 + j) * cube_width, 0,
@@ -101,6 +102,8 @@ void build_lvl() {
 			}
 		}
 	}
+
+	//building ball
 	_ball = new ball(program, 0.3, 1, 1);
 	_ball->translation = Translate(
 			(-1.0 * lvl_width / 2 + _ball->i) * cube_width, 0,
@@ -121,7 +124,7 @@ void init(void) {
 	build_lvl();
 	init_objects();
 
-	V_mat = LookAt(eye, vec3(0, 0, 0), vec3(0, 1, 0));
+	V_mat = LookAt(eye, vec3(-0.5, 0, 0), vec3(0, 1, 0));
 	P_mat = Perspective(45.0f, 1.0f * screen_width / screen_height, 1.0f,
 			100.0f);
 
@@ -185,11 +188,11 @@ void bufferBeforeDrawSufrace() {
 void display(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the window//
 
+	bufferBeforeDrawCube();
+
 	M_mat = _base->translation * _base->rotation;
 	glUniformMatrix4fv(M_loc, 1, GL_TRUE, M_mat);
 	_base->draw();
-
-	bufferBeforeDrawCube();
 
 	for (int i = 0; i < lvl_height; ++i) {
 		for (int j = 0; j < lvl_width; ++j) {
@@ -288,16 +291,18 @@ void onMotion(int x, int y) {
 		cur_mx = x;
 		cur_my = y;
 
+
+		// YES x and z are switched with y and x
+		// don't ask :D
 		if (cur_mx != last_mx || cur_my != last_my) {
-			xangle += (last_mx - cur_mx) / 5.0;
-			zangle += (last_my - cur_my) / 5.0;
-			if (abs(xangle) > 30)
-				xangle -= (last_mx - cur_mx) / 3.0;
+			zangle += (last_mx - cur_mx) / 5.0;
+			xangle += -(last_my - cur_my) / 5.0;
 			if (abs(zangle) > 30)
-				zangle -= (last_my - cur_my) / 3.0;
+				zangle -= (last_mx - cur_mx) / 3.0;
+			if (abs(xangle) > 30)
+				xangle += (last_my - cur_my) / 3.0;
 
 			W_mat = RotateX(xangle) * RotateZ(zangle);
-			//                        cout << last_mx - cur_mx << "  " << last_my - cur_my << endl;
 			last_mx = cur_mx;
 			last_my = cur_my;
 
@@ -328,7 +333,6 @@ void animate(int n) {
                                         == '#') {
                 tmp = _ball->translation;
                 speedz = 0;
-                cout << "fk" << endl;
         } else {
                 speedz += -zangle / 5000.0;
         }
@@ -362,7 +366,7 @@ int main(int argc, char **argv) {
 
 	glutInit(&argc, argv);
 	glEnable(GL_DEPTH_TEST);
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
+	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE | GLUT_MULTISAMPLE);
 	glutInitWindowSize(screen_width, screen_height);
 
 	//----------------------------------------
