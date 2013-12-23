@@ -33,7 +33,6 @@ mat4 V_mat = mat4(1.0); // View matrix
 mat4 W_mat = mat4(1.0); // World matrix (rotation of cube by mouse)
 mat4 P_mat = mat4(1.0); // projection matrix
 
-//vec3 eye(2,10,-10);
 vec3 eye(1, 10, 0);
 
 // test cube for EPIC RADO :D :D
@@ -253,8 +252,14 @@ void keyboard_special(int key, int x, int y) {
 	case GLUT_KEY_LEFT:
 		break;
 	case GLUT_KEY_DOWN:
+		eye[1] += 0.5;
+		glUniformMatrix4fv(V_loc, 1, GL_TRUE,
+				LookAt(eye, vec3(0, 0, 0), vec3(0, 1, 0)));
 		break;
 	case GLUT_KEY_UP:
+		eye[1] -= 0.5;
+		glUniformMatrix4fv(V_loc, 1, GL_TRUE,
+				LookAt(eye, vec3(0, 0, 0), vec3(0, 1, 0)));
 		break;
 	}
 }
@@ -323,6 +328,8 @@ void onMotion(int x, int y) {
 float speedz = 0;
 float speedx = 0;
 
+#define margin 0.19
+
 void animate(int n) {
 	mat4 tmp = _ball->translation;
 	vec4 pos = tmp * vec3(0, 0, 0);
@@ -331,12 +338,16 @@ void animate(int n) {
 	pos[0] += lvl_width / 2.0;
 	pos[2] += lvl_height / 2.0;
 	//	cout << speedx << " "<< speedz << endl;
-	if (map[(int) ceil(pos[2] - 0.3)][(int) floor(pos[0] + 0.3)] == '#'
-			|| map[(int) floor(pos[2] + 0.3)][(int) ceil(pos[0] - 0.3)] == '#'
-			|| map[(int) floor(pos[2] + 0.3)][(int) floor(pos[0] + 0.3)] == '#'
-			|| map[(int) ceil(pos[2] - 0.3)][(int) ceil(pos[0] - 0.3)] == '#') {
+	if (map[(int) ceil(pos[2] - margin)][(int) floor(pos[0] + margin)] == '#'
+			|| map[(int) floor(pos[2] + margin)][(int) ceil(pos[0] - margin)]
+					== '#'
+			|| map[(int) floor(pos[2] + margin)][(int) floor(pos[0] + margin)]
+					== '#'
+			|| map[(int) ceil(pos[2] - margin)][(int) ceil(pos[0] - margin)]
+					== '#') {
 		tmp = _ball->translation;
 		speedz = 0;
+		cout << "fk" << endl;
 	} else {
 		speedz += -zangle / 5000.0;
 	}
@@ -345,10 +356,13 @@ void animate(int n) {
 	pos = tmp * vec3(0, 0, 0);
 	pos[0] += lvl_height / 2.0;
 	pos[2] += lvl_width / 2.0;
-	if (map[(int) ceil(pos[2] - 0.3)][(int) floor(pos[0] + 0.3)] == '#'
-			|| map[(int) floor(pos[2] + 0.3)][(int) ceil(pos[0] - 0.3)] == '#'
-			|| map[(int) floor(pos[2] + 0.3)][(int) floor(pos[0] + 0.3)] == '#'
-			|| map[(int) ceil(pos[2] - 0.3)][(int) ceil(pos[0] - 0.3)] == '#') {
+	if (map[(int) ceil(pos[2] - margin)][(int) floor(pos[0] + margin)] == '#'
+			|| map[(int) floor(pos[2] + margin)][(int) ceil(pos[0] - margin)]
+					== '#'
+			|| map[(int) floor(pos[2] + margin)][(int) floor(pos[0] + margin)]
+					== '#'
+			|| map[(int) ceil(pos[2] - margin)][(int) ceil(pos[0] - margin)]
+					== '#') {
 		tmp = tt;
 		speedx = 0;
 	} else {
