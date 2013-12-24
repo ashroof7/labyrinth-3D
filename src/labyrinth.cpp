@@ -51,7 +51,7 @@ GLfloat cube_height = 1.0;
 GLfloat cube_depth = 1.0;
 GLuint uniform_tex_sampler;
 
-vec3 eye(-0.5, 6, 4);
+vec3 eye(-0.5, 10, 4);
 vec3 coi(-0.5, 0, 0);
 vec3 up(0, 1, 0);
 
@@ -435,7 +435,7 @@ void reset() {
 	if (win && level == 1)
 		init_lvl(++level);
 
-	eye = vec3(-0.5, 6, 4);
+	eye = vec3(-0.5, 10, 4);
 	coi = vec3(-0.5, 0, 0);
 	up = vec3(0, 1, 0);
 	glUniformMatrix4fv(V_loc, 1, GL_TRUE, LookAt(eye, coi, up));
