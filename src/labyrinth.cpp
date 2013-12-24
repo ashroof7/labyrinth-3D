@@ -44,14 +44,14 @@ int lvl_height = 7;
 bool falling = 0;
 bool win = 0;
 
-int level = 1;
+int level = 0;
 
 GLfloat cube_width = 1.0;
 GLfloat cube_height = 1.0;
 GLfloat cube_depth = 1.0;
 GLuint uniform_tex_sampler;
 
-vec3 eye(-0.5, 10, 4);
+vec3 eye(-0.5, 10, 0.001);
 vec3 coi(-0.5, 0, 0);
 vec3 up(0, 1, 0);
 
@@ -124,10 +124,25 @@ void build_lvl() {
 }
 
 void init_lvl(int level) {
-	if (level == 1)
-		load_level("small.map");
-	else
-		load_level("big.map");
+	switch(level){
+	case 1:
+		load_level("map1.map");
+		break;
+	case 2:
+		load_level("map2.map");
+		break;
+	case 3:
+		load_level("map3.map");
+		break;
+	case 4:
+		load_level("map4.map");
+		break;
+	case 5:
+		load_level("map5.map");
+		break;
+	default :
+		load_level("map0.map");
+	}
 
 	build_lvl();
 	cube::init(program);
@@ -432,10 +447,10 @@ void ball_fall_check() {
 }
 
 void reset() {
-	if (win && level == 1)
-		init_lvl(++level);
+	if (win)
+		init_lvl((++level)%6);
 
-	eye = vec3(-0.5, 10, 4);
+	eye = vec3(-0.5, 10, 0.001);
 	coi = vec3(-0.5, 0, 0);
 	up = vec3(0, 1, 0);
 	glUniformMatrix4fv(V_loc, 1, GL_TRUE, LookAt(eye, coi, up));
