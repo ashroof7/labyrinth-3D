@@ -16,5 +16,3 @@
 Debug
 .cproject
 .project
-src/include
-src/InitShader.cpp
